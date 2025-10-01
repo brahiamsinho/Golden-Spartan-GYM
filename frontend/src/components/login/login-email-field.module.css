@@ -1,0 +1,51 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.label {
+  color: rgb(226, 232, 240);
+}
+
+.labelOptional {
+  color: rgb(100, 116, 139);
+}
+
+.inputWrapper {
+  position: relative;
+}
+
+.input {
+  width: 100%;
+  background-color: rgb(2, 6, 23);
+  border: 1px solid rgb(51, 65, 85);
+  color: white;
+  padding: 0.5rem 2.5rem 0.5rem 0.75rem;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+}
+
+.input::placeholder {
+  color: rgb(100, 116, 139);
+}
+
+.input:focus {
+  outline: 2px solid rgb(16, 185, 129);
+  outline-offset: 2px;
+}
+
+.icon {
+  position: absolute;
+  right: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 1rem;
+  height: 1rem;
+  color: rgb(100, 116, 139);
+}
+
+.helperText {
+  font-size: 0.75rem;
+  color: rgb(100, 116, 139);
+}

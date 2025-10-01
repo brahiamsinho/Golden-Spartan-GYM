@@ -1,0 +1,35 @@
+.header {
+  border-bottom: 1px solid rgb(30, 41, 59);
+  padding: 1rem 1.5rem;
+}
+
+.container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  max-width: 80rem;
+  margin: 0 auto;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.logoIcon {
+  width: 1.5rem;
+  height: 1.5rem;
+  color: white;
+}
+
+.logoText {
+  color: white;
+  font-weight: 600;
+  font-size: 1.125rem;
+}
+
+.screenCode {
+  color: rgb(148, 163, 184);
+  font-size: 0.875rem;
+}
