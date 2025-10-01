@@ -176,21 +176,3 @@ npm test
 3. Commit tus cambios (`git commit -m 'Add some AmazingFeature'`)
 4. Push a la rama (`git push origin feature/AmazingFeature`)
 5. Abre un Pull Request
-
-## 📄 Licencia
-
-Este proyecto está bajo la Licencia MIT - ver el archivo [LICENSE](LICENSE) para más detalles.
-
-## 👥 Autores
-
-- **Tu Nombre** - *Desarrollo inicial* - [tu-usuario-github](https://github.com/tu-usuario-github)
-
-## 📞 Contacto
-
-Si tienes preguntas sobre el proyecto, puedes contactarme en:
-- Email: tu-email@ejemplo.com
-- GitHub: [@tu-usuario-github](https://github.com/tu-usuario-github)
-
----
-
-⭐ ¡No olvides darle una estrella al proyecto si te ha sido útil!
