@@ -312,31 +312,235 @@
   border-color: #3b82f6;
 }
 
+@media (max-width: 1024px) {
+  .users {
+    padding: 1.5rem;
+  }
+
+  .table {
+    font-size: 0.875rem;
+  }
+
+  .table th,
+  .table td {
+    padding: 0.75rem;
+  }
+}
+
 @media (max-width: 768px) {
   .users {
     padding: 1rem;
   }
-  
+
   .header {
     flex-direction: column;
     gap: 1rem;
     align-items: stretch;
   }
-  
+
+  .header h1 {
+    font-size: 1.5rem;
+  }
+
   .filters {
     flex-direction: column;
     gap: 0.75rem;
   }
-  
+
   .searchBox {
     max-width: none;
   }
-  
+
   .tableContainer {
     overflow-x: auto;
+    border-radius: 0.5rem;
   }
-  
+
   .table {
     min-width: 900px;
+    font-size: 0.8rem;
+  }
+
+  .table th,
+  .table td {
+    padding: 0.5rem;
+  }
+
+  .userInfo {
+    gap: 0.5rem;
+  }
+
+  .avatar {
+    width: 35px;
+    height: 35px;
+  }
+
+  .userName {
+    font-size: 0.8rem;
+  }
+
+  .userEmail {
+    font-size: 0.75rem;
+  }
+
+  .role {
+    font-size: 0.7rem;
+    padding: 0.2rem 0.5rem;
+  }
+
+  .permission {
+    font-size: 0.7rem;
+    padding: 0.1rem 0.4rem;
+  }
+
+  .morePermissions {
+    font-size: 0.7rem;
+    padding: 0.1rem 0.4rem;
+  }
+
+  .status {
+    font-size: 0.7rem;
+    padding: 0.2rem 0.5rem;
+  }
+
+  .lastAccess {
+    font-size: 0.75rem;
+  }
+
+  .time {
+    font-size: 0.7rem;
+  }
+
+  .sessionBadge {
+    font-size: 0.7rem;
+    padding: 0.2rem 0.5rem;
+  }
+
+  .actionButton {
+    padding: 0.375rem;
+  }
+
+  .pagination {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: center;
+  }
+
+  .paginationButtons {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .users {
+    padding: 0.5rem;
+  }
+
+  .header h1 {
+    font-size: 1.25rem;
+  }
+
+  .header p {
+    font-size: 0.875rem;
+  }
+
+  .addButton {
+    padding: 0.625rem 1rem;
+    font-size: 0.875rem;
+  }
+
+  .filters {
+    gap: 0.5rem;
+  }
+
+  .searchBox input {
+    padding: 0.625rem 0.75rem 0.625rem 2.5rem;
+    font-size: 0.8rem;
+  }
+
+  .filterSelect,
+  .filterButton {
+    padding: 0.625rem 0.75rem;
+    font-size: 0.8rem;
+  }
+
+  .table {
+    min-width: 800px;
+    font-size: 0.75rem;
+  }
+
+  .table th,
+  .table td {
+    padding: 0.375rem;
+  }
+
+  .userInfo {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+  }
+
+  .avatar {
+    width: 30px;
+    height: 30px;
+  }
+
+  .userName {
+    font-size: 0.75rem;
+  }
+
+  .userEmail {
+    font-size: 0.7rem;
+  }
+
+  .roleInfo {
+    gap: 0.25rem;
+  }
+
+  .role {
+    font-size: 0.65rem;
+    padding: 0.15rem 0.4rem;
+  }
+
+  .permission {
+    font-size: 0.65rem;
+    padding: 0.1rem 0.3rem;
+  }
+
+  .morePermissions {
+    font-size: 0.65rem;
+    padding: 0.1rem 0.3rem;
+  }
+
+  .status {
+    font-size: 0.65rem;
+    padding: 0.15rem 0.4rem;
+  }
+
+  .lastAccess {
+    font-size: 0.7rem;
+  }
+
+  .time {
+    font-size: 0.65rem;
+  }
+
+  .sessionBadge {
+    font-size: 0.65rem;
+    padding: 0.15rem 0.4rem;
+  }
+
+  .actionButton {
+    padding: 0.25rem;
+  }
+
+  .pagination {
+    font-size: 0.8rem;
+  }
+
+  .paginationButtons button {
+    padding: 0.375rem 0.5rem;
+    font-size: 0.8rem;
   }
 }

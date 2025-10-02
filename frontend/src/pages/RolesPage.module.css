@@ -600,8 +600,16 @@
 
 /* Responsive Design */
 @media (max-width: 1024px) {
+  .container {
+    padding: 1.5rem;
+  }
+
   .rolesGrid {
     grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+  }
+
+  .modalContent {
+    max-width: 90%;
   }
 }
 
@@ -609,41 +617,118 @@
   .container {
     padding: 1rem;
   }
-  
+
   .header {
     flex-direction: column;
     gap: 1rem;
     align-items: stretch;
   }
-  
+
+  .title {
+    font-size: 1.5rem;
+  }
+
+  .subtitle {
+    font-size: 1rem;
+  }
+
   .controls {
     flex-direction: column;
     gap: 1rem;
+    padding: 1rem;
   }
-  
+
+  .searchBox {
+    max-width: none;
+  }
+
   .stats {
     justify-content: center;
+    gap: 1rem;
   }
-  
+
+  .stat {
+    flex-direction: column;
+    text-align: center;
+    gap: 0.25rem;
+  }
+
+  .statValue {
+    font-size: 1.25rem;
+  }
+
   .rolesGrid {
     grid-template-columns: 1fr;
+    gap: 1rem;
   }
-  
+
+  .roleCard {
+    padding: 1.25rem;
+  }
+
+  .roleName {
+    font-size: 1.1rem;
+  }
+
+  .roleDescription {
+    font-size: 0.9rem;
+  }
+
+  .roleStats {
+    flex-direction: column;
+    gap: 0.5rem;
+    align-items: flex-start;
+  }
+
+  .roleStat {
+    font-size: 0.8rem;
+  }
+
+  .permissionsList {
+    gap: 0.375rem;
+  }
+
+  .permissionTag {
+    font-size: 0.7rem;
+    padding: 0.2rem 0.4rem;
+  }
+
+  .morePermissions {
+    font-size: 0.7rem;
+    padding: 0.2rem 0.4rem;
+  }
+
   .modal {
     padding: 1rem;
   }
-  
+
+  .modalContent {
+    max-width: 95%;
+  }
+
   .modalBody {
     padding: 1rem;
   }
-  
+
   .modalFooter {
     flex-direction: column;
     gap: 0.5rem;
   }
-  
-  .title {
-    font-size: 1.5rem;
+
+  .permissionsContainer {
+    max-height: 300px;
+  }
+
+  .permissionItem {
+    padding: 0.5rem;
+  }
+
+  .permissionName {
+    font-size: 0.9rem;
+  }
+
+  .permissionDescription {
+    font-size: 0.8rem;
   }
 }
 
@@ -651,25 +736,172 @@
   .container {
     padding: 0.5rem;
   }
-  
-  .roleCard {
-    padding: 1rem;
+
+  .header {
+    padding-bottom: 1rem;
   }
-  
-  .roleActions {
-    flex-direction: column;
-    gap: 0.25rem;
-  }
-  
-  .roleStats {
-    flex-direction: column;
-    gap: 0.5rem;
-    align-items: flex-start;
-  }
-  
+
   .title {
     font-size: 1.25rem;
     flex-direction: column;
     gap: 0.5rem;
+  }
+
+  .subtitle {
+    font-size: 0.9rem;
+  }
+
+  .createButton {
+    padding: 0.625rem 1rem;
+    font-size: 0.875rem;
+  }
+
+  .controls {
+    padding: 0.75rem;
+  }
+
+  .searchInput {
+    padding: 0.625rem 0.625rem 0.625rem 2.25rem;
+    font-size: 0.9rem;
+  }
+
+  .statValue {
+    font-size: 1.1rem;
+  }
+
+  .statLabel {
+    font-size: 0.8rem;
+  }
+
+  .roleCard {
+    padding: 1rem;
+  }
+
+  .roleHeader {
+    flex-direction: column;
+    gap: 0.75rem;
+    align-items: flex-start;
+  }
+
+  .roleActions {
+    flex-direction: row;
+    gap: 0.375rem;
+    align-self: flex-end;
+  }
+
+  .actionButton {
+    width: 32px;
+    height: 32px;
+  }
+
+  .roleName {
+    font-size: 1rem;
+  }
+
+  .roleDescription {
+    font-size: 0.85rem;
+  }
+
+  .roleStats {
+    padding: 0.5rem;
+  }
+
+  .roleStat {
+    font-size: 0.75rem;
+  }
+
+  .statusBadge {
+    font-size: 0.7rem;
+    padding: 0.2rem 0.5rem;
+  }
+
+  .permissionsTitle {
+    font-size: 0.8rem;
+  }
+
+  .permissionTag {
+    font-size: 0.65rem;
+    padding: 0.15rem 0.3rem;
+  }
+
+  .morePermissions {
+    font-size: 0.65rem;
+    padding: 0.15rem 0.3rem;
+  }
+
+  .createdDate {
+    font-size: 0.7rem;
+  }
+
+  .modal {
+    padding: 0.5rem;
+  }
+
+  .modalContent {
+    max-width: 100%;
+    max-height: 95vh;
+  }
+
+  .modalHeader {
+    padding: 1rem;
+  }
+
+  .modalHeader h2 {
+    font-size: 1.25rem;
+  }
+
+  .modalBody {
+    padding: 0.75rem;
+  }
+
+  .field {
+    margin-bottom: 1rem;
+  }
+
+  .label {
+    font-size: 0.9rem;
+  }
+
+  .input,
+  .textarea {
+    padding: 0.625rem;
+    font-size: 0.9rem;
+  }
+
+  .permissionsContainer {
+    max-height: 250px;
+    padding: 0.75rem;
+  }
+
+  .moduleTitle {
+    font-size: 0.9rem;
+    padding: 0.375rem;
+  }
+
+  .permissionItem {
+    padding: 0.375rem;
+  }
+
+  .permissionName {
+    font-size: 0.85rem;
+  }
+
+  .permissionDescription {
+    font-size: 0.75rem;
+  }
+
+  .checkbox {
+    transform: scale(1.1);
+  }
+
+  .modalFooter {
+    padding: 1rem;
+  }
+
+  .cancelButton,
+  .saveButton,
+  .deleteButton {
+    padding: 0.625rem 1rem;
+    font-size: 0.875rem;
   }
 }

@@ -1,34 +1,35 @@
-import type React from "react"
-import { useState } from "react"
-import { Lock, Eye, EyeOff, Loader2 } from "lucide-react"
-import { useAuth } from "../../contexts/AuthContext"
-import styles from "./login-form.module.css"
+import type React from "react";
+import { useState } from "react";
+import { Lock, Eye, EyeOff, Loader2 } from "lucide-react";
+import { useAuth } from "../../contexts/AuthContext";
+import styles from "./login-form.module.css";
 
 export default function LoginForm() {
-  const [usuario, setUsuario] = useState("")
-  const [password, setPassword] = useState("")
-  const [showPassword, setShowPassword] = useState(false)
-  const [errors, setErrors] = useState<string[]>([])
-  
-  const { login, isLoading } = useAuth()
+  const [usuario, setUsuario] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [errors, setErrors] = useState<string[]>([]);
+
+  const { login, isLoading } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    const newErrors: string[] = []
+    e.preventDefault();
+    const newErrors: string[] = [];
 
-    if (!usuario) newErrors.push("Usuario requerido")
-    if (!password) newErrors.push("Contraseña requerida")
-    if (password && password.length < 8) newErrors.push("Mínimo 8 caracteres")
+    if (!usuario) newErrors.push("Usuario requerido");
+    if (!password) newErrors.push("Contraseña requerida");
+    // Eliminamos la validación de longitud mínima para permitir la contraseña "admin"
+    // if (password && password.length < 8) newErrors.push("Mínimo 8 caracteres")
 
-    setErrors(newErrors)
+    setErrors(newErrors);
 
     if (newErrors.length === 0) {
-      const success = await login(usuario, password)
+      const success = await login(usuario, password);
       if (!success) {
-        setErrors(["Credenciales incorrectas. Intenta con admin/admin123"])
+        setErrors(["Credenciales incorrectas. Intenta con admin/admin"]);
       }
     }
-  }
+  };
 
   return (
     <div className={styles.card}>
@@ -93,8 +94,8 @@ export default function LoginForm() {
           )}
 
           {/* Botón de Envío */}
-          <button 
-            type="submit" 
+          <button
+            type="submit"
             className={styles.submitButton}
             disabled={isLoading}
           >
@@ -110,5 +111,5 @@ export default function LoginForm() {
         </form>
       </div>
     </div>
-  )
+  );
 }

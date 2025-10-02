@@ -590,8 +590,20 @@
 
 /* Responsive Design */
 @media (max-width: 1024px) {
+  .container {
+    padding: 1.5rem;
+  }
+
   .permissionsGrid {
     grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  }
+
+  .stats {
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  }
+
+  .modalContent {
+    max-width: 90%;
   }
 }
 
@@ -599,40 +611,141 @@
   .container {
     padding: 1rem;
   }
-  
+
   .header {
     flex-direction: column;
     gap: 1rem;
     align-items: stretch;
   }
-  
+
+  .title {
+    font-size: 1.5rem;
+  }
+
+  .subtitle {
+    font-size: 1rem;
+  }
+
+  .createButton {
+    padding: 0.625rem 1rem;
+    font-size: 0.875rem;
+  }
+
+  .stats {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
+
+  .statCard {
+    padding: 1rem;
+  }
+
+  .statIcon {
+    width: 40px;
+    height: 40px;
+    padding: 8px;
+  }
+
+  .statValue {
+    font-size: 1.25rem;
+  }
+
+  .statLabel {
+    font-size: 0.8rem;
+  }
+
   .controls {
     flex-direction: column;
     gap: 1rem;
+    padding: 1rem;
   }
-  
+
+  .searchSection {
+    max-width: none;
+  }
+
   .filterSection {
-    justify-content: space-between;
+    flex-direction: column;
+    gap: 0.75rem;
+    align-items: stretch;
   }
-  
-  .stats {
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+
+  .filterGroup {
+    justify-content: center;
   }
-  
+
+  .filterSelect {
+    flex: 1;
+    padding: 0.625rem;
+  }
+
+  .checkboxLabel {
+    justify-content: center;
+  }
+
+  .permissionsContainer {
+    gap: 1.5rem;
+  }
+
+  .moduleSection {
+    padding: 1.25rem;
+  }
+
+  .moduleTitle h3 {
+    font-size: 1.1rem;
+  }
+
+  .permissionCount {
+    font-size: 0.7rem;
+    padding: 0.2rem 0.5rem;
+  }
+
   .permissionsGrid {
     grid-template-columns: 1fr;
+    gap: 0.75rem;
   }
-  
+
+  .permissionCard {
+    padding: 0.875rem;
+  }
+
+  .permissionName {
+    font-size: 0.9rem;
+  }
+
+  .permissionDescription {
+    font-size: 0.8rem;
+  }
+
+  .permissionId {
+    font-size: 0.7rem;
+  }
+
+  .usageInfo {
+    font-size: 0.7rem;
+  }
+
+  .systemBadge,
+  .customBadge {
+    font-size: 0.7rem;
+    padding: 0.1rem 0.4rem;
+  }
+
   .modal {
     padding: 1rem;
   }
-  
+
+  .modalContent {
+    max-width: 95%;
+  }
+
   .modalBody {
     padding: 1rem;
   }
-  
-  .title {
-    font-size: 1.5rem;
+
+  .modalFooter {
+    flex-direction: column;
+    gap: 0.5rem;
   }
 }
 
@@ -640,18 +753,194 @@
   .container {
     padding: 0.5rem;
   }
-  
-  .moduleSection {
-    padding: 1rem;
+
+  .header {
+    padding-bottom: 1rem;
   }
-  
-  .permissionCard {
-    padding: 0.75rem;
-  }
-  
+
   .title {
     font-size: 1.25rem;
     flex-direction: column;
     gap: 0.5rem;
+  }
+
+  .subtitle {
+    font-size: 0.9rem;
+  }
+
+  .createButton {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.8rem;
+  }
+
+  .stats {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+
+  .statCard {
+    padding: 0.75rem;
+    flex-direction: column;
+    text-align: center;
+    gap: 0.5rem;
+  }
+
+  .statIcon {
+    width: 36px;
+    height: 36px;
+    padding: 6px;
+  }
+
+  .statValue {
+    font-size: 1.1rem;
+  }
+
+  .statLabel {
+    font-size: 0.75rem;
+  }
+
+  .controls {
+    padding: 0.75rem;
+  }
+
+  .searchInput {
+    padding: 0.625rem 0.625rem 0.625rem 2.25rem;
+    font-size: 0.9rem;
+  }
+
+  .filterSelect {
+    padding: 0.5rem;
+    font-size: 0.8rem;
+  }
+
+  .checkboxLabel {
+    font-size: 0.8rem;
+  }
+
+  .permissionsContainer {
+    gap: 1rem;
+  }
+
+  .moduleSection {
+    padding: 1rem;
+  }
+
+  .moduleTitle {
+    flex-direction: column;
+    gap: 0.5rem;
+    align-items: flex-start;
+  }
+
+  .moduleIcon {
+    width: 32px;
+    height: 32px;
+  }
+
+  .moduleTitle h3 {
+    font-size: 1rem;
+  }
+
+  .permissionCount {
+    font-size: 0.65rem;
+    padding: 0.15rem 0.4rem;
+    margin-left: 0;
+  }
+
+  .permissionCard {
+    padding: 0.75rem;
+  }
+
+  .permissionHeader {
+    flex-direction: column;
+    gap: 0.5rem;
+    align-items: flex-start;
+  }
+
+  .permissionActions {
+    align-self: flex-end;
+  }
+
+  .actionButton {
+    width: 28px;
+    height: 28px;
+  }
+
+  .permissionName {
+    font-size: 0.85rem;
+  }
+
+  .permissionDescription {
+    font-size: 0.75rem;
+  }
+
+  .permissionFooter {
+    flex-direction: column;
+    gap: 0.5rem;
+    align-items: flex-start;
+  }
+
+  .permissionMeta {
+    gap: 0.125rem;
+  }
+
+  .permissionId {
+    font-size: 0.65rem;
+  }
+
+  .usageInfo {
+    font-size: 0.65rem;
+  }
+
+  .systemBadge,
+  .customBadge {
+    font-size: 0.65rem;
+    padding: 0.1rem 0.3rem;
+  }
+
+  .modal {
+    padding: 0.5rem;
+  }
+
+  .modalContent {
+    max-width: 100%;
+    max-height: 95vh;
+  }
+
+  .modalHeader {
+    padding: 1rem;
+  }
+
+  .modalHeader h2 {
+    font-size: 1.25rem;
+  }
+
+  .modalBody {
+    padding: 0.75rem;
+  }
+
+  .field {
+    margin-bottom: 1rem;
+  }
+
+  .label {
+    font-size: 0.9rem;
+  }
+
+  .input,
+  .textarea,
+  .select {
+    padding: 0.625rem;
+    font-size: 0.9rem;
+  }
+
+  .modalFooter {
+    padding: 1rem;
+  }
+
+  .cancelButton,
+  .saveButton,
+  .deleteButton {
+    padding: 0.625rem 1rem;
+    font-size: 0.875rem;
   }
 }

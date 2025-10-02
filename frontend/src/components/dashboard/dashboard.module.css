@@ -49,17 +49,143 @@
 }
 
 @keyframes pulse {
-  0%, 100% {
+
+  0%,
+  100% {
     transform: scale(1);
   }
+
   50% {
     transform: scale(1.05);
   }
 }
 
+/* Mobile header */
+.mobileHeader {
+  display: none;
+}
+
 /* Responsive para sidebar colapsado */
+@media (max-width: 1200px) {
+  .main {
+    margin-left: 260px;
+  }
+}
+
+@media (max-width: 1024px) {
+  .main {
+    margin-left: 240px;
+  }
+}
+
 @media (max-width: 768px) {
+  .container {
+    position: relative;
+    overflow-x: hidden;
+  }
+
   .main {
     margin-left: 0;
+    padding-top: 60px;
+    /* Make space for mobile header */
+    transition: transform 0.3s ease-out;
+    width: 100%;
+  }
+
+  .container.sidebarOpen .main {
+    transform: translateX(280px);
+    /* Match sidebar width */
+  }
+
+  .mobileHeader {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    background: linear-gradient(90deg, #1e293b 0%, #0f172a 100%);
+    padding: 0.75rem 1rem;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 10;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+  }
+
+  .mobileHeader h2 {
+    color: white;
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .menuButton {
+    background: transparent;
+    border: none;
+    color: white;
+    cursor: pointer;
+    padding: 0.5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    transition: background 0.2s;
+  }
+
+  .menuButton:hover {
+    background: rgba(255, 255, 255, 0.1);
+  }
+
+  .menuButton:active {
+    background: rgba(255, 255, 255, 0.2);
+  }
+
+  /* Overlay when sidebar is open */
+  .container.sidebarOpen::after {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 5;
+    animation: fadeIn 0.3s;
+    pointer-events: auto;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+
+    to {
+      opacity: 1;
+    }
+  }
+
+  /* Adjust content padding on mobile */
+  .content {
+    padding: 0.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .mobileHeader {
+    padding: 0.5rem 0.75rem;
+  }
+
+  .mobileHeader h2 {
+    font-size: 1rem;
+  }
+
+  .menuButton {
+    padding: 0.375rem;
+  }
+
+  .content {
+    padding: 0.25rem;
   }
 }

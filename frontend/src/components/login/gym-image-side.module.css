@@ -45,6 +45,12 @@
   text-shadow: 0 1px 5px rgba(0, 0, 0, 0.5);
 }
 
+@media (max-width: 992px) {
+  .title {
+    font-size: 2.5rem;
+  }
+}
+
 @media (max-width: 768px) {
   .container {
     min-height: 300px;
@@ -60,5 +66,23 @@
 
   .subtitle {
     font-size: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .container {
+    min-height: 250px;
+  }
+
+  .overlay {
+    padding: 1.5rem;
+  }
+
+  .title {
+    font-size: 1.75rem;
+  }
+
+  .subtitle {
+    font-size: 0.9rem;
   }
 }

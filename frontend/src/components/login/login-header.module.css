@@ -33,3 +33,29 @@
   color: rgb(148, 163, 184);
   font-size: 0.875rem;
 }
+
+/* Media queries para responsive */
+@media (max-width: 768px) {
+  .header {
+    padding: 0.875rem 1.25rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .header {
+    padding: 0.75rem 1rem;
+  }
+
+  .logoText {
+    font-size: 1rem;
+  }
+
+  .logoIcon {
+    width: 1.25rem;
+    height: 1.25rem;
+  }
+
+  .screenCode {
+    font-size: 0.75rem;
+  }
+}
