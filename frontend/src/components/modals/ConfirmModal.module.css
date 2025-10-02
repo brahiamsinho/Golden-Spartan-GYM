@@ -1,0 +1,196 @@
+/* Overlay del Modal */
+.overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  backdrop-filter: blur(4px);
+  animation: fadeIn 0.2s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Modal Container */
+.modal {
+  background-color: rgb(15, 23, 42);
+  border: 1px solid rgb(30, 41, 59);
+  border-radius: 0.75rem;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  width: 100%;
+  max-width: 26rem;
+  margin: 1rem;
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-20px) scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Header del Modal */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1.5rem;
+  border-bottom: 1px solid rgb(30, 41, 59);
+}
+
+.titleSection {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.icon {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+.title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: white;
+  margin: 0;
+}
+
+.closeButton {
+  background: none;
+  border: none;
+  color: rgb(148, 163, 184);
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 0.375rem;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.closeButton:hover {
+  background-color: rgb(30, 41, 59);
+  color: white;
+}
+
+/* Contenido del Modal */
+.content {
+  padding: 1.5rem;
+}
+
+.message {
+  font-size: 1rem;
+  color: rgb(203, 213, 225);
+  margin: 0;
+  line-height: 1.5;
+}
+
+/* Botones de Acción */
+.actions {
+  display: flex;
+  gap: 0.75rem;
+  padding: 1.5rem;
+  border-top: 1px solid rgb(30, 41, 59);
+  justify-content: flex-end;
+}
+
+.cancelButton {
+  padding: 0.625rem 1.25rem;
+  background-color: transparent;
+  border: 1px solid rgb(51, 65, 85);
+  color: rgb(203, 213, 225);
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.cancelButton:hover {
+  background-color: rgb(30, 41, 59);
+  color: white;
+  border-color: rgb(71, 85, 105);
+}
+
+.confirmButton {
+  padding: 0.625rem 1.25rem;
+  border: none;
+  color: white;
+  border-radius: 0.375rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+/* Variantes de botones */
+.dangerButton {
+  background-color: rgb(239, 68, 68);
+}
+
+.dangerButton:hover {
+  background-color: rgb(220, 38, 38);
+}
+
+.dangerButton:active {
+  background-color: rgb(185, 28, 28);
+}
+
+.warningButton {
+  background-color: rgb(245, 158, 11);
+}
+
+.warningButton:hover {
+  background-color: rgb(217, 119, 6);
+}
+
+.warningButton:active {
+  background-color: rgb(180, 83, 9);
+}
+
+.infoButton {
+  background-color: rgb(59, 130, 246);
+}
+
+.infoButton:hover {
+  background-color: rgb(37, 99, 235);
+}
+
+.infoButton:active {
+  background-color: rgb(29, 78, 216);
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .modal {
+    margin: 0.5rem;
+  }
+  
+  .actions {
+    flex-direction: column-reverse;
+  }
+  
+  .cancelButton,
+  .confirmButton {
+    width: 100%;
+    justify-content: center;
+  }
+}
