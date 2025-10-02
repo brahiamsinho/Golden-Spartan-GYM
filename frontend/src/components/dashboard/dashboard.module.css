@@ -1,0 +1,65 @@
+.container {
+  display: flex;
+  height: 100vh;
+  background: #0f172a;
+}
+
+.main {
+  flex: 1;
+  margin-left: 280px;
+  overflow-y: auto;
+  background: #0f172a;
+}
+
+.content {
+  min-height: 100%;
+  color: white;
+}
+
+/* Páginas placeholder */
+.placeholder {
+  padding: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+.placeholder h1 {
+  color: white;
+  font-size: 2.5rem;
+  margin: 0 0 1rem 0;
+}
+
+.placeholder p {
+  color: #94a3b8;
+  font-size: 1.125rem;
+  margin: 0 0 2rem 0;
+}
+
+.comingSoon {
+  background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+  color: white;
+  padding: 1rem 2rem;
+  border-radius: 2rem;
+  font-size: 1.125rem;
+  font-weight: 600;
+  display: inline-block;
+  box-shadow: 0 4px 20px rgba(59, 130, 246, 0.3);
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+/* Responsive para sidebar colapsado */
+@media (max-width: 768px) {
+  .main {
+    margin-left: 0;
+  }
+}

@@ -1,6 +1,7 @@
 import type React from "react"
 import { useState } from "react"
-import { Lock, Eye, EyeOff } from "lucide-react"
+import { Lock, Eye, EyeOff, Loader2 } from "lucide-react"
+import { useAuth } from "../../contexts/AuthContext"
 import styles from "./login-form.module.css"
 
 export default function LoginForm() {
@@ -8,8 +9,10 @@ export default function LoginForm() {
   const [password, setPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)
   const [errors, setErrors] = useState<string[]>([])
+  
+  const { login, isLoading } = useAuth()
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     const newErrors: string[] = []
 
@@ -20,8 +23,10 @@ export default function LoginForm() {
     setErrors(newErrors)
 
     if (newErrors.length === 0) {
-      console.log("Login attempt:", { usuario, password })
-      // Aquí iría la lógica de autenticación
+      const success = await login(usuario, password)
+      if (!success) {
+        setErrors(["Credenciales incorrectas. Intenta con admin/admin123"])
+      }
     }
   }
 
@@ -88,8 +93,19 @@ export default function LoginForm() {
           )}
 
           {/* Botón de Envío */}
-          <button type="submit" className={styles.submitButton}>
-            Iniciar sesión
+          <button 
+            type="submit" 
+            className={styles.submitButton}
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <>
+                <Loader2 className={styles.spinner} />
+                Iniciando...
+              </>
+            ) : (
+              "Iniciar sesión"
+            )}
           </button>
         </form>
       </div>
