@@ -144,8 +144,33 @@ class ApiService {
   }
 
   // Bitácora
-  async getBitacora() {
-    const response = await fetch(`${API_BASE_URL}/bitacora/`, {
+  async getBitacora(params?: {
+    usuario?: string;
+    tipo_accion?: string;
+    nivel?: string;
+    fecha_inicio?: string;
+    fecha_fin?: string;
+    accion?: string;
+    ip?: string;
+  }) {
+    const queryParams = new URLSearchParams();
+    if (params) {
+      Object.entries(params).forEach(([key, value]) => {
+        if (value) queryParams.append(key, value);
+      });
+    }
+
+    const url = `${API_BASE_URL}/bitacora/${
+      queryParams.toString() ? `?${queryParams.toString()}` : ""
+    }`;
+    const response = await fetch(url, {
+      headers: this.getAuthHeaders(),
+    });
+    return this.handleResponse(response);
+  }
+
+  async getBitacoraEstadisticas() {
+    const response = await fetch(`${API_BASE_URL}/bitacora/estadisticas/`, {
       headers: this.getAuthHeaders(),
     });
     return this.handleResponse(response);
@@ -156,6 +181,15 @@ class ApiService {
       method: "POST",
       headers: this.getAuthHeaders(),
       body: JSON.stringify({ accion }),
+    });
+    return this.handleResponse(response);
+  }
+
+  // Logout
+  async logout() {
+    const response = await fetch(`${API_BASE_URL}/logout/`, {
+      method: "POST",
+      headers: this.getAuthHeaders(),
     });
     return this.handleResponse(response);
   }

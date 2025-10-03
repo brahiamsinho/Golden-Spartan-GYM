@@ -17,13 +17,17 @@ Golden-Spartan-SI1/
 
 - **Django 5.2.6** - Framework web de Python
 - **Django REST Framework 3.16.1** - Para crear APIs REST
+- **JWT Authentication** - Autenticación basada en tokens
+- **CORS** - Para comunicación frontend-backend
 - **Python 3.12** - Lenguaje de programación
 
 ### Frontend
 
-- **React** - Biblioteca de JavaScript para interfaces de usuario
+- **React 18** - Biblioteca de JavaScript para interfaces de usuario
+- **TypeScript** - JavaScript con tipado estático
 - **Vite** - Herramienta de construcción rápida
-- **ESLint** - Linter para JavaScript
+- **CSS Modules** - Estilos modulares
+- **Lucide React** - Iconos
 
 ## 📋 Prerrequisitos
 
@@ -49,7 +53,7 @@ python -m venv venv
 venv\Scripts\activate
 
 # Linux/Mac
-python3 -m venv venv
+python -m venv venv
 source venv/bin/activate
 ```
 
@@ -59,36 +63,32 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-4. **Configuración automática (Recomendado):**
+4. Configura las variables de entorno:
 
 ```bash
-# Opción 1: Script automático
-python setup.py
+# Copia el archivo de ejemplo
+copy env.example .env
 
-# Opción 2: PowerShell (Windows)
-.\setup.ps1
+# Edita .env con tus configuraciones
 ```
 
-5. **Configuración manual:**
+5. Ejecuta las migraciones:
 
 ```bash
-# Ejecuta las migraciones
 python manage.py migrate
-
-# Ejecuta los seeders (crea superusuario automáticamente)
-python manage.py seed
-
-# O ejecuta seeders con reset (elimina datos existentes)
-python manage.py seed --reset
 ```
 
-6. Inicia el servidor de desarrollo:
+6. Crea datos iniciales:
+
+```bash
+python manage.py seed
+```
+
+7. Inicia el servidor:
 
 ```bash
 python manage.py runserver
 ```
-
-El backend estará disponible en `http://localhost:8000`
 
 ### Frontend (React)
 
@@ -110,136 +110,157 @@ npm install
 npm run dev
 ```
 
-El frontend estará disponible en `http://localhost:5173`
+## 🎯 Funcionalidades Implementadas
 
-## 📁 Estructura del Proyecto
+### ✅ Sistema de Autenticación
+
+- Login con JWT
+- Logout seguro
+- Protección de rutas
+- Gestión de sesiones
+
+### ✅ Gestión de Usuarios
+
+- CRUD completo de usuarios
+- Asignación de roles
+- Validación de datos
+- Interfaz responsiva
+
+### ✅ Sistema de Roles y Permisos
+
+- Roles: Super Administrador, Administrador, Instructor
+- Permisos granulares
+- Control de acceso basado en roles
+- Asignación automática de permisos
+
+### ✅ Bitácora de Actividades
+
+- Registro automático de todas las actividades
+- Captura de IP y User-Agent
+- Filtros avanzados
+- Estadísticas en tiempo real
+- Diferentes niveles de log (info, warning, error, critical)
+
+### ✅ Interfaz de Usuario
+
+- Dashboard responsivo
+- Sidebar con navegación
+- Header con información del usuario
+- Modales para acciones
+- Diseño moderno y profesional
+
+## 🔧 Comandos Útiles
 
 ### Backend
 
-```
-backend/
-├── api/                 # Aplicación principal de la API
-│   ├── models.py       # Modelos de datos
-│   ├── views.py        # Vistas de la API
-│   ├── serializers.py  # Serializadores
-│   └── urls.py         # URLs de la API
-├── config/             # Configuración de Django
-│   ├── settings.py     # Configuración principal
-│   └── urls.py         # URLs principales
-└── manage.py           # Script de administración
+```bash
+python manage.py runserver          # Iniciar servidor
+python manage.py migrate            # Ejecutar migraciones
+python manage.py seed               # Crear datos iniciales
+python manage.py createsuperuser    # Crear superusuario
 ```
 
 ### Frontend
 
-```
-frontend/
-├── src/                # Código fuente de React
-│   ├── components/     # Componentes reutilizables
-│   ├── pages/          # Páginas de la aplicación
-│   ├── services/       # Servicios para API calls
-│   └── utils/          # Utilidades
-├── public/             # Archivos estáticos
-└── package.json        # Dependencias de Node.js
-```
-
-## 🔧 Variables de Entorno
-
-Crea un archivo `.env` en el directorio `backend/` con las siguientes variables:
-
-```env
-SECRET_KEY=tu_clave_secreta_aqui
-DEBUG=True
-ALLOWED_HOSTS=localhost,127.0.0.1
-DATABASE_URL=sqlite:///db.sqlite3
-```
-
-## 🌱 Seeders
-
-El proyecto incluye un sistema de seeders modular que permite poblar la base de datos con datos iniciales de forma automática.
-
-### Comandos disponibles:
-
 ```bash
-# Ejecutar seeders (crea datos sin eliminar existentes)
-python manage.py seed
-
-# Ejecutar seeders con reset (elimina datos existentes primero)
-python manage.py seed --reset
+npm run dev                         # Modo desarrollo
+npm run build                       # Build para producción
+npm run lint                        # Ejecutar linter
 ```
 
-### Estructura de seeders:
+## 📊 API Endpoints
 
-```
-backend/seeders/
-├── __init__.py          # Exporta todos los seeders
-├── base_seeder.py       # Clase base para todos los seeders
-├── user_seeder.py       # Seeder para usuarios del sistema
-├── member_seeder.py     # Seeder para miembros del gimnasio
-├── plan_seeder.py       # Seeder para planes de membresía
-└── README.md           # Documentación detallada
-```
+### Autenticación
 
-### Datos creados automáticamente:
+- `POST /api/token/` - Obtener token JWT
+- `POST /api/token/refresh/` - Renovar token
+- `POST /api/logout/` - Cerrar sesión
+- `GET /api/user-info/` - Información del usuario
+
+### Usuarios
+
+- `GET /api/usuarios/` - Listar usuarios
+- `POST /api/usuarios/` - Crear usuario
+- `PUT /api/usuarios/{id}/` - Actualizar usuario
+- `DELETE /api/usuarios/{id}/` - Eliminar usuario
+
+### Roles y Permisos
+
+- `GET /api/roles/` - Listar roles
+- `GET /api/permisos/` - Listar permisos
+- `GET /api/permisos-usuario/` - Permisos del usuario actual
+
+### Bitácora
+
+- `GET /api/bitacora/` - Listar actividades
+- `GET /api/bitacora/estadisticas/` - Estadísticas de actividades
+
+## 🔐 Credenciales por Defecto
 
 - **Superusuario Admin:**
   - Username: `admin`
   - Password: `admin`
   - Email: `admin@gym.com`
 
-### Ventajas para el equipo:
+## 🚀 Inicio Rápido
 
-✅ **Configuración rápida**: Los nuevos contribuidores pueden configurar el proyecto en segundos  
-✅ **Datos consistentes**: Todos los desarrolladores trabajan con los mismos datos iniciales  
-✅ **Sin fricción**: No necesitas crear manualmente usuarios de prueba  
-✅ **Reproducible**: Los seeders se ejecutan de la misma forma en cualquier entorno  
-✅ **Modular**: Fácil agregar nuevos seeders para diferentes entidades  
-✅ **Mantenible**: Cada seeder es independiente y fácil de modificar
+1. **Clona el repositorio:**
 
-## 📚 API Endpoints
+```bash
+git clone https://github.com/brahiamsinho/Golden-Spartan-GYM.git
+cd Golden-Spartan-SI1
+```
 
-### Autenticación
-
-- `POST /api/auth/login/` - Iniciar sesión
-- `POST /api/auth/logout/` - Cerrar sesión
-- `POST /api/auth/register/` - Registro de usuario
-
-### Gestión de Miembros
-
-- `GET /api/members/` - Listar miembros
-- `POST /api/members/` - Crear miembro
-- `GET /api/members/{id}/` - Obtener miembro específico
-- `PUT /api/members/{id}/` - Actualizar miembro
-- `DELETE /api/members/{id}/` - Eliminar miembro
-
-## 🧪 Testing
-
-### Backend
+2. **Configura el backend:**
 
 ```bash
 cd backend
-python manage.py test
+python -m venv venv
+venv\Scripts\activate  # Windows
+pip install -r requirements.txt
+python manage.py migrate
+python manage.py seed
+python manage.py runserver
 ```
 
-### Frontend
+3. **Configura el frontend:**
 
 ```bash
-cd frontend
-npm test
+cd ../frontend
+npm install
+npm run dev
 ```
 
-## 📦 Despliegue
+4. **Accede a la aplicación:**
 
-### Backend
+- Frontend: http://localhost:5173
+- Backend API: http://localhost:8000
+- Admin Panel: http://localhost:8000/admin/
 
-1. Configura las variables de entorno de producción
-2. Ejecuta `python manage.py collectstatic`
-3. Configura tu servidor web (Nginx, Apache)
-4. Usa Gunicorn o similar como servidor WSGI
+## 📱 Características de la Interfaz
 
-### Frontend
+- **Responsive Design** - Funciona en desktop, tablet y móvil
+- **Tema Oscuro** - Interfaz moderna y profesional
+- **Navegación Intuitiva** - Sidebar con módulos organizados
+- **Feedback Visual** - Estados de carga, errores y éxito
+- **Filtros Avanzados** - Búsqueda y filtrado en tiempo real
 
-1. Ejecuta `npm run build`
-2. Sube los archivos de `dist/` a tu servidor web
+## 🔒 Seguridad
+
+- Autenticación JWT segura
+- Validación de datos en frontend y backend
+- Protección CSRF
+- CORS configurado correctamente
+- Logs de seguridad en bitácora
+- Filtrado de información sensible
+
+## 📈 Monitoreo y Auditoría
+
+- Bitácora completa de actividades
+- Registro de IPs y User-Agents
+- Estadísticas de uso
+- Diferentes niveles de log
+- Filtros por usuario, fecha, tipo de actividad
 
 ## 🤝 Contribución
 
@@ -251,19 +272,22 @@ npm test
 
 ## 📄 Licencia
 
-Este proyecto está bajo la Licencia MIT - ver el archivo [LICENSE](LICENSE) para más detalles.
+Este proyecto está bajo la Licencia MIT. Ver el archivo `LICENSE` para más detalles.
 
-## 👥 Autores
+## 👥 Equipo
 
-- **Tu Nombre** - _Desarrollo inicial_ - [tu-usuario-github](https://github.com/tu-usuario-github)
+- **Desarrollador Principal:** Brahiam Sinho
+- **Proyecto:** Golden Spartan SI1
+- **Año:** 2025
 
-## 📞 Contacto
+## 📞 Soporte
 
-Si tienes preguntas sobre el proyecto, puedes contactarme en:
+Si tienes problemas o preguntas, por favor:
 
-- Email: tu-email@ejemplo.com
-- GitHub: [@tu-usuario-github](https://github.com/tu-usuario-github)
+1. Revisa la documentación
+2. Busca en los issues existentes
+3. Crea un nuevo issue con detalles del problema
 
 ---
 
-⭐ ¡No olvides darle una estrella al proyecto si te ha sido útil!
+**¡Gracias por usar Golden Spartan SI1!** 🏋️‍♂️

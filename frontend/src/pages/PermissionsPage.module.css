@@ -251,33 +251,60 @@
 
 .permissionsGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-  gap: 1rem;
+  grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+  gap: 2rem;
 }
 
 .permissionCard {
-  background: #0f172a;
+  background: linear-gradient(145deg, #0f172a, #1e293b);
   border: 1px solid #334155;
-  border-radius: 8px;
-  padding: 1rem;
-  transition: all 0.2s ease;
+  border-radius: 16px;
+  padding: 2rem;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.permissionCard::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #3b82f6, #8b5cf6, #06b6d4);
+  opacity: 0;
+  transition: opacity 0.3s ease;
 }
 
 .permissionCard:hover {
   border-color: #3b82f6;
-  transform: translateY(-1px);
+  transform: translateY(-8px) scale(1.02);
+  box-shadow: 0 20px 40px rgba(59, 130, 246, 0.2), 0 0 0 1px rgba(59, 130, 246, 0.1);
+}
+
+.permissionCard:hover::before {
+  opacity: 1;
 }
 
 .permissionCard.systemPermission {
   border-color: #ef4444;
-  background: rgba(239, 68, 68, 0.05);
+  background: linear-gradient(145deg, rgba(239, 68, 68, 0.1), #0f172a);
+}
+
+.permissionCard.systemPermission::before {
+  background: linear-gradient(90deg, #ef4444, #f97316);
+  opacity: 1;
 }
 
 .permissionHeader {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  margin-bottom: 1rem;
+  margin-bottom: 1.5rem;
+  position: relative;
+  z-index: 1;
 }
 
 .permissionInfo {
@@ -287,107 +314,214 @@
 .permissionName {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  font-size: 1rem;
-  font-weight: 600;
+  gap: 0.75rem;
+  font-size: 1.25rem;
+  font-weight: 700;
   color: white;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.75rem;
+  background: linear-gradient(135deg, #ffffff, #e2e8f0);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 .systemIcon {
   color: #ef4444;
+  filter: drop-shadow(0 0 4px rgba(239, 68, 68, 0.3));
 }
 
 .permissionDescription {
-  color: #94a3b8;
-  font-size: 0.875rem;
-  line-height: 1.4;
+  color: #cbd5e1;
+  font-size: 1rem;
+  line-height: 1.6;
+  font-weight: 400;
 }
 
 .permissionActions {
   display: flex;
-  gap: 0.25rem;
+  gap: 0.75rem;
+  position: relative;
+  z-index: 1;
 }
 
 .actionButton {
-  width: 32px;
-  height: 32px;
-  border: 1px solid #475569;
-  background: #1e293b;
-  border-radius: 4px;
+  width: 44px;
+  height: 44px;
+  border: 2px solid #475569;
+  background: linear-gradient(145deg, #1e293b, #0f172a);
+  backdrop-filter: blur(10px);
+  border-radius: 12px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  transition: all 0.2s ease;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   color: #94a3b8;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.actionButton::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  transition: left 0.5s ease;
+}
+
+.actionButton:hover::before {
+  left: 100%;
 }
 
 .actionButton:hover {
-  background: #334155;
+  background: rgba(51, 65, 85, 0.9);
   color: white;
+  border-color: #64748b;
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
 }
 
 .actionButton.delete {
   color: #ef4444;
   border-color: #ef4444;
+  background: linear-gradient(145deg, rgba(239, 68, 68, 0.1), #1e293b);
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.2);
 }
 
 .actionButton.delete:hover {
-  background: rgba(239, 68, 68, 0.1);
+  background: linear-gradient(145deg, rgba(239, 68, 68, 0.2), #1e293b);
+  transform: translateY(-3px) scale(1.05);
+  box-shadow: 0 6px 16px rgba(239, 68, 68, 0.3);
+}
+
+.actionButton svg {
+  width: 18px;
+  height: 18px;
+  transition: all 0.3s ease;
+}
+
+.actionButton:hover svg {
+  transform: scale(1.1);
+}
+
+.actionButton.delete svg {
+  filter: drop-shadow(0 0 4px rgba(239, 68, 68, 0.3));
 }
 
 .permissionFooter {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding-top: 0.75rem;
+  padding-top: 1.5rem;
   border-top: 1px solid #334155;
+  position: relative;
+  z-index: 1;
 }
 
 .permissionMeta {
   display: flex;
   flex-direction: column;
-  gap: 0.25rem;
+  gap: 0.5rem;
 }
 
 .permissionId {
-  font-size: 0.75rem;
+  font-size: 0.8rem;
   color: #64748b;
-  font-family: monospace;
+  font-family: 'Courier New', monospace;
+  background: rgba(100, 116, 139, 0.1);
+  padding: 0.25rem 0.5rem;
+  border-radius: 6px;
+  border: 1px solid rgba(100, 116, 139, 0.2);
 }
 
 .usageInfo {
   display: flex;
   align-items: center;
-  gap: 0.25rem;
-  font-size: 0.75rem;
-  color: #94a3b8;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+  color: #cbd5e1;
+  font-weight: 500;
 }
 
 .permissionBadges {
   display: flex;
-  gap: 0.5rem;
+  gap: 0.75rem;
 }
 
 .systemBadge {
-  background: rgba(239, 68, 68, 0.2);
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(220, 38, 38, 0.1));
   color: #ef4444;
-  border: 1px solid rgba(239, 68, 68, 0.3);
-  padding: 0.125rem 0.5rem;
-  border-radius: 12px;
-  font-size: 0.75rem;
-  font-weight: 500;
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  position: relative;
+  overflow: hidden;
+  backdrop-filter: blur(5px);
+  transition: all 0.3s ease;
+}
+
+.systemBadge::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  transition: left 0.5s ease;
+}
+
+.systemBadge:hover::before {
+  left: 100%;
+}
+
+.systemBadge:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3);
 }
 
 .customBadge {
-  background: rgba(34, 197, 94, 0.2);
-  color: #22c55e;
-  border: 1px solid rgba(34, 197, 94, 0.3);
-  padding: 0.125rem 0.5rem;
-  border-radius: 12px;
-  font-size: 0.75rem;
-  font-weight: 500;
+  background: linear-gradient(135deg, rgba(34, 197, 94, 0.2), rgba(16, 185, 129, 0.1));
+  color: #10b981;
+  border: 1px solid rgba(34, 197, 94, 0.4);
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  position: relative;
+  overflow: hidden;
+  backdrop-filter: blur(5px);
+  transition: all 0.3s ease;
+}
+
+.customBadge::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  transition: left 0.5s ease;
+}
+
+.customBadge:hover::before {
+  left: 100%;
+}
+
+.customBadge:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
 }
 
 /* Modal Styles */

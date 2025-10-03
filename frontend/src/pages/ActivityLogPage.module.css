@@ -71,6 +71,200 @@
     font-weight: 600;
 }
 
+/* Filtros */
+.filtersSection {
+    background: #1e293b;
+    border: 1px solid #334155;
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.filtersSection h3 {
+    color: white;
+    font-size: 1.25rem;
+    margin: 0 0 1rem 0;
+}
+
+.filtersGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.filterGroup {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.filterGroup label {
+    color: #94a3b8;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.filterGroup input,
+.filterGroup select {
+    background: #0f172a;
+    border: 1px solid #334155;
+    border-radius: 0.5rem;
+    padding: 0.75rem;
+    color: white;
+    font-size: 0.875rem;
+    transition: border-color 0.2s;
+}
+
+.filterGroup input:focus,
+.filterGroup select:focus {
+    outline: none;
+    border-color: #3b82f6;
+}
+
+.filterGroup input::placeholder {
+    color: #64748b;
+}
+
+.filterActions {
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-end;
+}
+
+.applyButton,
+.clearButton {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    transition: all 0.2s;
+    cursor: pointer;
+    border: none;
+}
+
+.applyButton {
+    background: #3b82f6;
+    color: white;
+}
+
+.applyButton:hover {
+    background: #2563eb;
+}
+
+.clearButton {
+    background: #64748b;
+    color: white;
+}
+
+.clearButton:hover {
+    background: #475569;
+}
+
+/* Estados de carga y error */
+.loading,
+.error {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem;
+    text-align: center;
+}
+
+.loading p,
+.error p {
+    color: #94a3b8;
+    margin: 1rem 0 0 0;
+}
+
+.spinner {
+    animation: spin 1s linear infinite;
+    color: #3b82f6;
+}
+
+@keyframes spin {
+    from {
+        transform: rotate(0deg);
+    }
+
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.error {
+    color: #ef4444;
+}
+
+.retryButton {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 1rem;
+    padding: 0.75rem 1rem;
+    background: #ef4444;
+    color: white;
+    border: none;
+    border-radius: 0.5rem;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.retryButton:hover {
+    background: #dc2626;
+}
+
+/* Estado vacío */
+.emptyState {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 3rem;
+    text-align: center;
+    color: #94a3b8;
+}
+
+.emptyState p {
+    margin: 1rem 0 0 0;
+}
+
+/* Datos adicionales */
+.additionalData {
+    margin-top: 0.75rem;
+    padding: 0.75rem;
+    background: #0f172a;
+    border-radius: 0.5rem;
+    border: 1px solid #334155;
+}
+
+.additionalData summary {
+    color: #94a3b8;
+    cursor: pointer;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.additionalData pre {
+    color: #64748b;
+    font-size: 0.75rem;
+    margin: 0.5rem 0 0 0;
+    white-space: pre-wrap;
+    word-break: break-all;
+}
+
+/* Tipo de actividad */
+.activityType {
+    color: #64748b;
+    font-size: 0.75rem;
+    margin: 0 0 0.5rem 0;
+    font-style: italic;
+}
+
 .content {
     display: flex;
     flex-direction: column;

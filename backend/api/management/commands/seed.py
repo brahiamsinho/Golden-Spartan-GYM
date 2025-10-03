@@ -2,9 +2,7 @@ from django.core.management.base import BaseCommand
 from django.db import transaction
 from django.core.management import call_command
 from seeders.user_seeder import UserSeeder
-from seeders.member_seeder import MemberSeeder
-from seeders.plan_seeder import PlanSeeder
-from seeders.rol_permiso_seeder import RolPermisoSeeder  # Añadir esta línea
+from seeders.rol_permiso_seeder import RolPermisoSeeder
 import logging
 
 logger = logging.getLogger(__name__)
@@ -42,11 +40,8 @@ class Command(BaseCommand):
         """Ejecuta todos los seeders registrados"""
         # Lista de seeders a ejecutar
         seeders = [
-            UserSeeder(self),
-            MemberSeeder(self),
-            PlanSeeder(self),
-            RolPermisoSeeder(self),  # Añadir esta línea
-            # Aquí puedes agregar más seeders cuando los crees
+            RolPermisoSeeder(self),  # Primero crear roles y permisos
+            UserSeeder(self),  # Luego crear usuarios
         ]
 
         for seeder in seeders:

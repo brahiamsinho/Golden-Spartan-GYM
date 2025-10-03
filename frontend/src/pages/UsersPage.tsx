@@ -11,6 +11,7 @@ import {
   Clock,
 } from "lucide-react";
 import RegisterUserModal from "../components/modals/RegisterUserModal";
+import EditUserModal from "../components/modals/EditUserModal";
 import apiService from "../services/api";
 import styles from "./UsersPage.module.css";
 
@@ -42,6 +43,8 @@ export default function UsersPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterRole, setFilterRole] = useState<string>("all");
   const [showRegisterModal, setShowRegisterModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<Usuario | null>(null);
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -70,15 +73,10 @@ export default function UsersPage() {
 
   const handleUserRegistered = async (newUser: UserFormData) => {
     try {
-      console.log("Datos del usuario a crear:", newUser);
-
       // Obtener roles disponibles
       const roles = await apiService.getRoles();
-      console.log("Roles disponibles:", roles);
 
       const selectedRole = roles.find((r: any) => r.nombre === newUser.role);
-
-      console.log("Rol seleccionado:", selectedRole);
 
       if (!selectedRole) {
         throw new Error(`Rol '${newUser.role}' no encontrado`);
@@ -94,14 +92,10 @@ export default function UsersPage() {
         rol: selectedRole.id, // ID del rol
       };
 
-      console.log("Datos a enviar al backend:", userData);
-
       const createdUser = await apiService.createUser(userData);
 
       // Recargar la lista de usuarios
       await loadUsers();
-
-      console.log("Usuario creado exitosamente:", createdUser);
     } catch (error) {
       console.error("Error creando usuario:", error);
       setError(
@@ -110,6 +104,29 @@ export default function UsersPage() {
         }`
       );
     }
+  };
+
+  const handleEditUser = (user: Usuario) => {
+    setSelectedUser(user);
+    setShowEditModal(true);
+  };
+
+  const handleDeleteUser = async (userId: number) => {
+    if (!confirm("¿Estás seguro de que quieres eliminar este usuario?")) {
+      return;
+    }
+
+    try {
+      await apiService.deleteUser(userId.toString());
+      await loadUsers();
+    } catch (error) {
+      console.error("Error eliminando usuario:", error);
+      setError("Error al eliminar usuario");
+    }
+  };
+
+  const handleUserUpdated = async () => {
+    await loadUsers();
   };
 
   const getRoleColor = (role: string) => {
@@ -322,14 +339,18 @@ export default function UsersPage() {
                   <td>
                     <div className={styles.actions}>
                       <button
+                        onClick={() => handleEditUser(usuario)}
                         className={styles.actionButton}
                         title="Editar usuario"
+                        disabled={usuario.username === "admin"}
                       >
                         <Edit size={16} />
                       </button>
                       <button
+                        onClick={() => handleDeleteUser(usuario.id)}
                         className={styles.actionButton}
                         title="Eliminar usuario"
+                        disabled={usuario.username === "admin"}
                       >
                         <Trash2 size={16} />
                       </button>
@@ -365,6 +386,13 @@ export default function UsersPage() {
         isOpen={showRegisterModal}
         onClose={() => setShowRegisterModal(false)}
         onUserRegistered={handleUserRegistered}
+      />
+
+      <EditUserModal
+        isOpen={showEditModal}
+        onClose={() => setShowEditModal(false)}
+        user={selectedUser}
+        onUserUpdated={handleUserUpdated}
       />
     </div>
   );

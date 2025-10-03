@@ -36,10 +36,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
     password: string
   ): Promise<boolean> => {
     setIsLoading(true);
-    console.log("Iniciando proceso de login...");
 
     try {
-      console.log("Haciendo petición a /api/token/...");
       // Llamada real a la API de Django para obtener el token
       const tokenResponse = await fetch("http://localhost:8000/api/token/", {
         method: "POST",
@@ -49,25 +47,16 @@ export function AuthProvider({ children }: AuthProviderProps) {
         body: JSON.stringify({ username, password }),
       });
 
-      console.log(
-        "Respuesta del token:",
-        tokenResponse.status,
-        tokenResponse.statusText
-      );
-
       if (!tokenResponse.ok) {
-        console.error("Error en respuesta del token:", tokenResponse.status);
         return false;
       }
 
       const tokenData = await tokenResponse.json();
-      console.log("Token obtenido exitosamente");
 
       // Guardar tokens en localStorage
       localStorage.setItem("accessToken", tokenData.access);
       localStorage.setItem("refreshToken", tokenData.refresh);
 
-      console.log("Haciendo petición a /api/user-info/...");
       // Obtener información del usuario
       const userResponse = await fetch("http://localhost:8000/api/user-info/", {
         headers: {
@@ -75,23 +64,14 @@ export function AuthProvider({ children }: AuthProviderProps) {
         },
       });
 
-      console.log(
-        "Respuesta del user-info:",
-        userResponse.status,
-        userResponse.statusText
-      );
-
       if (!userResponse.ok) {
-        console.error("Error en respuesta del user-info:", userResponse.status);
         return false;
       }
 
       const userData = await userResponse.json();
-      console.log("Login exitoso - Usuario autenticado");
       setUser(userData);
       localStorage.setItem("user", JSON.stringify(userData));
 
-      console.log("Login exitoso");
       return true;
     } catch (error) {
       console.error("Error en login:", error);
@@ -108,18 +88,21 @@ export function AuthProvider({ children }: AuthProviderProps) {
     }
   };
 
-  const logout = () => {
-    // Opcional: Registrar salida en el backend
+  const logout = async () => {
+    // Registrar salida en el backend usando el nuevo endpoint
     const accessToken = localStorage.getItem("accessToken");
     if (accessToken) {
-      fetch("http://localhost:8000/api/registrar-bitacora/", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${accessToken}`,
-        },
-        body: JSON.stringify({ accion: "Cierre de sesión" }),
-      }).catch((error) => console.error("Error al registrar salida:", error));
+      try {
+        await fetch("http://localhost:8000/api/logout/", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`,
+          },
+        });
+      } catch (error) {
+        console.error("Error al registrar salida:", error);
+      }
     }
 
     // Limpiar datos de sesión

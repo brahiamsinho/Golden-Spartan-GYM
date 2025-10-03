@@ -143,7 +143,6 @@ export default function RegisterUserModal({
     try {
       await new Promise((resolve) => setTimeout(resolve, 1500));
 
-      console.log("Usuario registrado:", formData);
       onUserRegistered(formData);
 
       // Resetear formulario

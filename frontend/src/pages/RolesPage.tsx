@@ -1,188 +1,204 @@
-import { useState } from 'react'
-import { Shield, Edit, Trash2, Plus, Check, X, Users, Lock, Search, Calendar, Activity } from 'lucide-react'
-import styles from './RolesPage.module.css'
+import { useState, useEffect } from "react";
+import {
+  Shield,
+  Edit,
+  Trash2,
+  Plus,
+  Check,
+  X,
+  Users,
+  Lock,
+  Search,
+  Calendar,
+  Activity,
+} from "lucide-react";
+import styles from "./RolesPage.module.css";
+import apiService from "../services/api";
 
 interface Permission {
-  id: string
-  name: string
-  description: string
-  module: string
+  id: number;
+  nombre: string;
+  descripcion: string;
 }
 
 interface Role {
-  id: string
-  name: string
-  description: string
-  permissions: string[]
-  usersCount: number
-  isActive: boolean
-  createdAt: string
+  id: number;
+  nombre: string;
+  descripcion: string;
+  permisos: Permission[];
+  usuarios_count: number;
+  activo: boolean;
+  fecha_creacion: string;
 }
 
-const AVAILABLE_PERMISSIONS: Permission[] = [
-  // Dashboard y Sistema
-  { id: 'dashboard.view', name: 'Ver Dashboard', description: 'Acceso al panel principal del sistema', module: 'Dashboard' },
-  { id: 'system.admin', name: 'Administrador del Sistema', description: 'Acceso completo a todas las funciones', module: 'Sistema' },
-  
-  // Usuarios
-  { id: 'users.view', name: 'Ver Usuarios', description: 'Ver lista de usuarios del sistema', module: 'Usuarios' },
-  { id: 'users.create', name: 'Crear Usuarios', description: 'Registrar nuevos usuarios', module: 'Usuarios' },
-  { id: 'users.edit', name: 'Editar Usuarios', description: 'Modificar información de usuarios', module: 'Usuarios' },
-  { id: 'users.delete', name: 'Eliminar Usuarios', description: 'Eliminar usuarios del sistema', module: 'Usuarios' },
-  
-  // Clientes
-  { id: 'clients.view', name: 'Ver Clientes', description: 'Ver lista de clientes del gimnasio', module: 'Clientes' },
-  { id: 'clients.create', name: 'Crear Clientes', description: 'Registrar nuevos clientes', module: 'Clientes' },
-  { id: 'clients.edit', name: 'Editar Clientes', description: 'Modificar información de clientes', module: 'Clientes' },
-  { id: 'clients.delete', name: 'Eliminar Clientes', description: 'Eliminar clientes del sistema', module: 'Clientes' },
-  
-  // Roles y Permisos
-  { id: 'roles.view', name: 'Ver Roles', description: 'Ver lista de roles del sistema', module: 'Roles' },
-  { id: 'roles.create', name: 'Crear Roles', description: 'Crear nuevos roles', module: 'Roles' },
-  { id: 'roles.edit', name: 'Editar Roles', description: 'Modificar roles existentes', module: 'Roles' },
-  { id: 'roles.delete', name: 'Eliminar Roles', description: 'Eliminar roles del sistema', module: 'Roles' },
-  
-  // Reportes
-  { id: 'reports.view', name: 'Ver Reportes', description: 'Acceso a reportes y estadísticas', module: 'Reportes' },
-  { id: 'reports.export', name: 'Exportar Reportes', description: 'Descargar reportes en diferentes formatos', module: 'Reportes' },
-]
-
 export default function RolesPage() {
-  const [roles, setRoles] = useState<Role[]>([
-    {
-      id: '1',
-      name: 'Super Administrador',
-      description: 'Acceso completo al sistema',
-      permissions: AVAILABLE_PERMISSIONS.map(p => p.id),
-      usersCount: 1,
-      isActive: true,
-      createdAt: '2024-01-15'
-    },
-    {
-      id: '2',
-      name: 'Administrador',
-      description: 'Gestión de usuarios y clientes',
-      permissions: ['dashboard.view', 'users.view', 'users.create', 'users.edit', 'clients.view', 'clients.create', 'clients.edit', 'reports.view'],
-      usersCount: 3,
-      isActive: true,
-      createdAt: '2024-01-15'
-    },
-    {
-      id: '3',
-      name: 'Entrenador',
-      description: 'Gestión básica de clientes',
-      permissions: ['dashboard.view', 'clients.view', 'clients.edit'],
-      usersCount: 5,
-      isActive: true,
-      createdAt: '2024-01-20'
-    },
-  
-  ])
-
-  const [showCreateModal, setShowCreateModal] = useState(false)
-  const [showEditModal, setShowEditModal] = useState(false)
-  const [showDeleteModal, setShowDeleteModal] = useState(false)
-  const [selectedRole, setSelectedRole] = useState<Role | null>(null)
-  const [searchTerm, setSearchTerm] = useState('')
+  const [roles, setRoles] = useState<Role[]>([]);
+  const [permissions, setPermissions] = useState<Permission[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [selectedRole, setSelectedRole] = useState<Role | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
 
   const [newRole, setNewRole] = useState({
-    name: '',
-    description: '',
-    permissions: [] as string[]
-  })
+    nombre: "",
+    descripcion: "",
+    permisos: [] as number[],
+  });
 
-  const groupedPermissions = AVAILABLE_PERMISSIONS.reduce((acc, permission) => {
-    if (!acc[permission.module]) {
-      acc[permission.module] = []
+  useEffect(() => {
+    loadRoles();
+    loadPermissions();
+  }, []);
+
+  const loadRoles = async () => {
+    try {
+      setLoading(true);
+      const data = await apiService.getRoles();
+      setRoles(data);
+    } catch (err) {
+      setError("Error al cargar roles");
+      console.error("Error loading roles:", err);
+    } finally {
+      setLoading(false);
     }
-    acc[permission.module].push(permission)
-    return acc
-  }, {} as Record<string, Permission[]>)
+  };
 
-  const filteredRoles = roles.filter(role =>
-    role.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    role.description.toLowerCase().includes(searchTerm.toLowerCase())
-  )
+  const loadPermissions = async () => {
+    try {
+      const data = await apiService.getPermissions();
+      setPermissions(data);
+    } catch (err) {
+      console.error("Error loading permissions:", err);
+    }
+  };
 
-  const handleCreateRole = () => {
-    if (!newRole.name.trim()) return
+  const groupedPermissions = permissions.reduce((acc, permission) => {
+    const module = permission.nombre.split(".")[0] || "Otros";
+    if (!acc[module]) {
+      acc[module] = [];
+    }
+    acc[module].push(permission);
+    return acc;
+  }, {} as Record<string, Permission[]>);
 
-    const role: Role = {
-      id: (roles.length + 1).toString(),
-      name: newRole.name,
-      description: newRole.description,
-      permissions: newRole.permissions,
-      usersCount: 0,
-      isActive: true,
-      createdAt: new Date().toISOString().split('T')[0]
+  const filteredRoles = roles.filter(
+    (role) =>
+      role.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      role.descripcion.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const handleCreateRole = async () => {
+    if (!newRole.nombre.trim()) return;
+
+    try {
+      await apiService.createRole({
+        nombre: newRole.nombre,
+        descripcion: newRole.descripcion,
+        permisos: newRole.permisos,
+      });
+
+      await loadRoles();
+      setNewRole({ nombre: "", descripcion: "", permisos: [] });
+      setShowCreateModal(false);
+    } catch (err) {
+      setError("Error al crear rol");
+      console.error("Error creating role:", err);
+    }
+  };
+
+  const handleEditRole = async () => {
+    if (!selectedRole || !newRole.nombre.trim()) return;
+
+    try {
+      await apiService.updateRole(selectedRole.id, {
+        nombre: newRole.nombre,
+        descripcion: newRole.descripcion,
+        permisos: newRole.permisos,
+      });
+
+      await loadRoles();
+      setShowEditModal(false);
+      setSelectedRole(null);
+      setNewRole({ nombre: "", descripcion: "", permisos: [] });
+    } catch (err) {
+      setError("Error al actualizar rol");
+      console.error("Error updating role:", err);
+    }
+  };
+
+  const handleDeleteRole = async () => {
+    if (!selectedRole) return;
+
+    if (selectedRole.usuarios_count > 0) {
+      alert("No se puede eliminar un rol que tiene usuarios asignados");
+      return;
     }
 
-    setRoles([...roles, role])
-    setNewRole({ name: '', description: '', permissions: [] })
-    setShowCreateModal(false)
-  }
-
-  const handleEditRole = () => {
-    if (!selectedRole || !newRole.name.trim()) return
-
-    setRoles(roles.map(role =>
-      role.id === selectedRole.id
-        ? { ...role, name: newRole.name, description: newRole.description, permissions: newRole.permissions }
-        : role
-    ))
-    setShowEditModal(false)
-    setSelectedRole(null)
-    setNewRole({ name: '', description: '', permissions: [] })
-  }
-
-  const handleDeleteRole = () => {
-    if (!selectedRole) return
-
-    if (selectedRole.usersCount > 0) {
-      alert('No se puede eliminar un rol que tiene usuarios asignados')
-      return
+    try {
+      await apiService.deleteRole(selectedRole.id);
+      await loadRoles();
+      setShowDeleteModal(false);
+      setSelectedRole(null);
+    } catch (err) {
+      setError("Error al eliminar rol");
+      console.error("Error deleting role:", err);
     }
-
-    setRoles(roles.filter(role => role.id !== selectedRole.id))
-    setShowDeleteModal(false)
-    setSelectedRole(null)
-  }
-
-  const toggleRoleStatus = (roleId: string) => {
-    setRoles(roles.map(role =>
-      role.id === roleId
-        ? { ...role, isActive: !role.isActive }
-        : role
-    ))
-  }
+  };
 
   const openEditModal = (role: Role) => {
-    setSelectedRole(role)
+    setSelectedRole(role);
     setNewRole({
-      name: role.name,
-      description: role.description,
-      permissions: [...role.permissions]
-    })
-    setShowEditModal(true)
-  }
+      nombre: role.nombre,
+      descripcion: role.descripcion,
+      permisos: role.permisos.map((p) => p.id),
+    });
+    setShowEditModal(true);
+  };
 
   const openDeleteModal = (role: Role) => {
-    setSelectedRole(role)
-    setShowDeleteModal(true)
-  }
+    setSelectedRole(role);
+    setShowDeleteModal(true);
+  };
 
-  const togglePermission = (permissionId: string) => {
-    setNewRole(prev => ({
+  const togglePermission = (permissionId: number) => {
+    setNewRole((prev) => ({
       ...prev,
-      permissions: prev.permissions.includes(permissionId)
-        ? prev.permissions.filter(id => id !== permissionId)
-        : [...prev.permissions, permissionId]
-    }))
+      permisos: prev.permisos.includes(permissionId)
+        ? prev.permisos.filter((id) => id !== permissionId)
+        : [...prev.permisos, permissionId],
+    }));
+  };
+
+  const getPermissionName = (permissionId: number) => {
+    const permission = permissions.find((p) => p.id === permissionId);
+    return permission ? permission.nombre : `Permiso ${permissionId}`;
+  };
+
+  if (loading) {
+    return (
+      <div className={styles.container}>
+        <div className={styles.loading}>
+          <div className={styles.spinner}></div>
+          <p>Cargando roles...</p>
+        </div>
+      </div>
+    );
   }
 
-  const getPermissionName = (permissionId: string) => {
-    const permission = AVAILABLE_PERMISSIONS.find(p => p.id === permissionId)
-    return permission ? permission.name : permissionId
+  if (error) {
+    return (
+      <div className={styles.container}>
+        <div className={styles.error}>
+          <p>{error}</p>
+          <button onClick={loadRoles} className={styles.retryButton}>
+            Reintentar
+          </button>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -228,7 +244,9 @@ export default function RolesPage() {
           <div className={styles.stat}>
             <Activity size={16} className={styles.statIcon} />
             <div>
-              <span className={styles.statValue}>{roles.filter(r => r.isActive).length}</span>
+              <span className={styles.statValue}>
+                {roles.filter((r) => r.activo).length}
+              </span>
               <span className={styles.statLabel}>Activos</span>
             </div>
           </div>
@@ -237,11 +255,16 @@ export default function RolesPage() {
 
       <div className={styles.rolesGrid}>
         {filteredRoles.map((role) => (
-          <div key={role.id} className={`${styles.roleCard} ${!role.isActive ? styles.inactive : ''}`}>
+          <div
+            key={role.id}
+            className={`${styles.roleCard} ${
+              !role.activo ? styles.inactive : ""
+            }`}
+          >
             <div className={styles.roleHeader}>
               <div className={styles.roleInfo}>
-                <h3 className={styles.roleName}>{role.name}</h3>
-                <p className={styles.roleDescription}>{role.description}</p>
+                <h3 className={styles.roleName}>{role.nombre}</h3>
+                <p className={styles.roleDescription}>{role.descripcion}</p>
               </div>
               <div className={styles.roleActions}>
                 <button
@@ -252,16 +275,10 @@ export default function RolesPage() {
                   <Edit size={16} />
                 </button>
                 <button
-                  onClick={() => toggleRoleStatus(role.id)}
-                  className={`${styles.actionButton} ${role.isActive ? styles.deactivate : styles.activate}`}
-                  title={role.isActive ? 'Desactivar' : 'Activar'}
-                >
-                  {role.isActive ? <X size={16} /> : <Check size={16} />}
-                </button>
-                <button
                   onClick={() => openDeleteModal(role)}
                   className={`${styles.actionButton} ${styles.delete}`}
                   title="Eliminar rol"
+                  disabled={role.nombre === "Super Administrador"}
                 >
                   <Trash2 size={16} />
                 </button>
@@ -271,15 +288,19 @@ export default function RolesPage() {
             <div className={styles.roleStats}>
               <div className={styles.roleStat}>
                 <Users size={16} />
-                <span>{role.usersCount} usuarios</span>
+                <span>{role.usuarios_count} usuarios</span>
               </div>
               <div className={styles.roleStat}>
                 <Lock size={16} />
-                <span>{role.permissions.length} permisos</span>
+                <span>{role.permisos.length} permisos</span>
               </div>
               <div className={styles.roleStatus}>
-                <span className={`${styles.statusBadge} ${role.isActive ? styles.active : styles.inactive}`}>
-                  {role.isActive ? 'Activo' : 'Inactivo'}
+                <span
+                  className={`${styles.statusBadge} ${
+                    role.activo ? styles.active : styles.inactive
+                  }`}
+                >
+                  {role.activo ? "Activo" : "Inactivo"}
                 </span>
               </div>
             </div>
@@ -287,14 +308,14 @@ export default function RolesPage() {
             <div className={styles.permissionsPreview}>
               <h4 className={styles.permissionsTitle}>Permisos asignados:</h4>
               <div className={styles.permissionsList}>
-                {role.permissions.slice(0, 3).map(permissionId => (
-                  <span key={permissionId} className={styles.permissionTag}>
-                    {getPermissionName(permissionId)}
+                {role.permisos.slice(0, 3).map((permission) => (
+                  <span key={permission.id} className={styles.permissionTag}>
+                    {permission.nombre}
                   </span>
                 ))}
-                {role.permissions.length > 3 && (
+                {role.permisos.length > 3 && (
                   <span className={styles.morePermissions}>
-                    +{role.permissions.length - 3} más
+                    +{role.permisos.length - 3} más
                   </span>
                 )}
               </div>
@@ -303,7 +324,9 @@ export default function RolesPage() {
             <div className={styles.roleFooter}>
               <div className={styles.createdDate}>
                 <Calendar size={12} />
-                <span>Creado: {new Date(role.createdAt).toLocaleDateString()}</span>
+                <span>
+                  Creado: {new Date(role.fecha_creacion).toLocaleDateString()}
+                </span>
               </div>
             </div>
           </div>
@@ -316,18 +339,23 @@ export default function RolesPage() {
           <div className={styles.modalContent}>
             <div className={styles.modalHeader}>
               <h2>Crear Nuevo Rol</h2>
-              <button onClick={() => setShowCreateModal(false)} className={styles.closeButton}>
+              <button
+                onClick={() => setShowCreateModal(false)}
+                className={styles.closeButton}
+              >
                 <X size={20} />
               </button>
             </div>
-            
+
             <div className={styles.modalBody}>
               <div className={styles.field}>
                 <label className={styles.label}>Nombre del Rol *</label>
                 <input
                   type="text"
-                  value={newRole.name}
-                  onChange={(e) => setNewRole(prev => ({ ...prev, name: e.target.value }))}
+                  value={newRole.nombre}
+                  onChange={(e) =>
+                    setNewRole((prev) => ({ ...prev, nombre: e.target.value }))
+                  }
                   className={styles.input}
                   placeholder="Ej: Administrador de Ventas"
                 />
@@ -336,8 +364,13 @@ export default function RolesPage() {
               <div className={styles.field}>
                 <label className={styles.label}>Descripción</label>
                 <textarea
-                  value={newRole.description}
-                  onChange={(e) => setNewRole(prev => ({ ...prev, description: e.target.value }))}
+                  value={newRole.descripcion}
+                  onChange={(e) =>
+                    setNewRole((prev) => ({
+                      ...prev,
+                      descripcion: e.target.value,
+                    }))
+                  }
                   className={styles.textarea}
                   placeholder="Descripción del rol y sus responsabilidades"
                   rows={3}
@@ -347,33 +380,47 @@ export default function RolesPage() {
               <div className={styles.field}>
                 <label className={styles.label}>Permisos</label>
                 <div className={styles.permissionsContainer}>
-                  {Object.entries(groupedPermissions).map(([module, permissions]) => (
-                    <div key={module} className={styles.permissionModule}>
-                      <h4 className={styles.moduleTitle}>{module}</h4>
-                      <div className={styles.modulePermissions}>
-                        {permissions.map(permission => (
-                          <label key={permission.id} className={styles.permissionItem}>
-                            <input
-                              type="checkbox"
-                              checked={newRole.permissions.includes(permission.id)}
-                              onChange={() => togglePermission(permission.id)}
-                              className={styles.checkbox}
-                            />
-                            <div className={styles.permissionInfo}>
-                              <span className={styles.permissionName}>{permission.name}</span>
-                              <span className={styles.permissionDescription}>{permission.description}</span>
-                            </div>
-                          </label>
-                        ))}
+                  {Object.entries(groupedPermissions).map(
+                    ([module, modulePermissions]) => (
+                      <div key={module} className={styles.permissionModule}>
+                        <h4 className={styles.moduleTitle}>{module}</h4>
+                        <div className={styles.modulePermissions}>
+                          {modulePermissions.map((permission) => (
+                            <label
+                              key={permission.id}
+                              className={styles.permissionItem}
+                            >
+                              <input
+                                type="checkbox"
+                                checked={newRole.permisos.includes(
+                                  permission.id
+                                )}
+                                onChange={() => togglePermission(permission.id)}
+                                className={styles.checkbox}
+                              />
+                              <div className={styles.permissionInfo}>
+                                <span className={styles.permissionName}>
+                                  {permission.nombre}
+                                </span>
+                                <span className={styles.permissionDescription}>
+                                  {permission.descripcion}
+                                </span>
+                              </div>
+                            </label>
+                          ))}
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    )
+                  )}
                 </div>
               </div>
             </div>
 
             <div className={styles.modalFooter}>
-              <button onClick={() => setShowCreateModal(false)} className={styles.cancelButton}>
+              <button
+                onClick={() => setShowCreateModal(false)}
+                className={styles.cancelButton}
+              >
                 Cancelar
               </button>
               <button onClick={handleCreateRole} className={styles.saveButton}>
@@ -391,18 +438,23 @@ export default function RolesPage() {
           <div className={styles.modalContent}>
             <div className={styles.modalHeader}>
               <h2>Editar Rol</h2>
-              <button onClick={() => setShowEditModal(false)} className={styles.closeButton}>
+              <button
+                onClick={() => setShowEditModal(false)}
+                className={styles.closeButton}
+              >
                 <X size={20} />
               </button>
             </div>
-            
+
             <div className={styles.modalBody}>
               <div className={styles.field}>
                 <label className={styles.label}>Nombre del Rol *</label>
                 <input
                   type="text"
-                  value={newRole.name}
-                  onChange={(e) => setNewRole(prev => ({ ...prev, name: e.target.value }))}
+                  value={newRole.nombre}
+                  onChange={(e) =>
+                    setNewRole((prev) => ({ ...prev, nombre: e.target.value }))
+                  }
                   className={styles.input}
                 />
               </div>
@@ -410,8 +462,13 @@ export default function RolesPage() {
               <div className={styles.field}>
                 <label className={styles.label}>Descripción</label>
                 <textarea
-                  value={newRole.description}
-                  onChange={(e) => setNewRole(prev => ({ ...prev, description: e.target.value }))}
+                  value={newRole.descripcion}
+                  onChange={(e) =>
+                    setNewRole((prev) => ({
+                      ...prev,
+                      descripcion: e.target.value,
+                    }))
+                  }
                   className={styles.textarea}
                   rows={3}
                 />
@@ -420,33 +477,47 @@ export default function RolesPage() {
               <div className={styles.field}>
                 <label className={styles.label}>Permisos</label>
                 <div className={styles.permissionsContainer}>
-                  {Object.entries(groupedPermissions).map(([module, permissions]) => (
-                    <div key={module} className={styles.permissionModule}>
-                      <h4 className={styles.moduleTitle}>{module}</h4>
-                      <div className={styles.modulePermissions}>
-                        {permissions.map(permission => (
-                          <label key={permission.id} className={styles.permissionItem}>
-                            <input
-                              type="checkbox"
-                              checked={newRole.permissions.includes(permission.id)}
-                              onChange={() => togglePermission(permission.id)}
-                              className={styles.checkbox}
-                            />
-                            <div className={styles.permissionInfo}>
-                              <span className={styles.permissionName}>{permission.name}</span>
-                              <span className={styles.permissionDescription}>{permission.description}</span>
-                            </div>
-                          </label>
-                        ))}
+                  {Object.entries(groupedPermissions).map(
+                    ([module, modulePermissions]) => (
+                      <div key={module} className={styles.permissionModule}>
+                        <h4 className={styles.moduleTitle}>{module}</h4>
+                        <div className={styles.modulePermissions}>
+                          {modulePermissions.map((permission) => (
+                            <label
+                              key={permission.id}
+                              className={styles.permissionItem}
+                            >
+                              <input
+                                type="checkbox"
+                                checked={newRole.permisos.includes(
+                                  permission.id
+                                )}
+                                onChange={() => togglePermission(permission.id)}
+                                className={styles.checkbox}
+                              />
+                              <div className={styles.permissionInfo}>
+                                <span className={styles.permissionName}>
+                                  {permission.nombre}
+                                </span>
+                                <span className={styles.permissionDescription}>
+                                  {permission.descripcion}
+                                </span>
+                              </div>
+                            </label>
+                          ))}
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    )
+                  )}
                 </div>
               </div>
             </div>
 
             <div className={styles.modalFooter}>
-              <button onClick={() => setShowEditModal(false)} className={styles.cancelButton}>
+              <button
+                onClick={() => setShowEditModal(false)}
+                className={styles.cancelButton}
+              >
                 Cancelar
               </button>
               <button onClick={handleEditRole} className={styles.saveButton}>
@@ -464,19 +535,26 @@ export default function RolesPage() {
           <div className={styles.modalContent}>
             <div className={styles.modalHeader}>
               <h2>Eliminar Rol</h2>
-              <button onClick={() => setShowDeleteModal(false)} className={styles.closeButton}>
+              <button
+                onClick={() => setShowDeleteModal(false)}
+                className={styles.closeButton}
+              >
                 <X size={20} />
               </button>
             </div>
-            
+
             <div className={styles.modalBody}>
               <div className={styles.deleteWarning}>
                 <div className={styles.warningIcon}>⚠️</div>
                 <div>
-                  <p>¿Estás seguro de que quieres eliminar el rol <strong>"{selectedRole.name}"</strong>?</p>
-                  {selectedRole.usersCount > 0 ? (
+                  <p>
+                    ¿Estás seguro de que quieres eliminar el rol{" "}
+                    <strong>"{selectedRole.nombre}"</strong>?
+                  </p>
+                  {selectedRole.usuarios_count > 0 ? (
                     <p className={styles.errorText}>
-                      Este rol tiene {selectedRole.usersCount} usuarios asignados. No se puede eliminar.
+                      Este rol tiene {selectedRole.usuarios_count} usuarios
+                      asignados. No se puede eliminar.
                     </p>
                   ) : (
                     <p>Esta acción no se puede deshacer.</p>
@@ -486,13 +564,19 @@ export default function RolesPage() {
             </div>
 
             <div className={styles.modalFooter}>
-              <button onClick={() => setShowDeleteModal(false)} className={styles.cancelButton}>
+              <button
+                onClick={() => setShowDeleteModal(false)}
+                className={styles.cancelButton}
+              >
                 Cancelar
               </button>
-              <button 
-                onClick={handleDeleteRole} 
+              <button
+                onClick={handleDeleteRole}
                 className={styles.deleteButton}
-                disabled={selectedRole.usersCount > 0}
+                disabled={
+                  selectedRole.usuarios_count > 0 ||
+                  selectedRole.nombre === "Super Administrador"
+                }
               >
                 <Trash2 size={16} />
                 Eliminar Rol
@@ -502,5 +586,5 @@ export default function RolesPage() {
         </div>
       )}
     </div>
-  )
+  );
 }

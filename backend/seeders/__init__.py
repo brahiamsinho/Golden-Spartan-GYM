@@ -5,7 +5,6 @@ Contiene todos los seeders para poblar la base de datos con datos iniciales
 
 from .base_seeder import BaseSeeder
 from .user_seeder import UserSeeder
-from .member_seeder import MemberSeeder
-from .plan_seeder import PlanSeeder
+from .rol_permiso_seeder import RolPermisoSeeder
 
-__all__ = ["BaseSeeder", "UserSeeder", "MemberSeeder", "PlanSeeder"]
+__all__ = ["BaseSeeder", "UserSeeder", "RolPermisoSeeder"]
