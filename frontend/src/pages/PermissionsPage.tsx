@@ -150,15 +150,23 @@ export default function PermissionsPage() {
       setShowEditModal(false);
       setSelectedPermission(null);
       setNewPermission({ nombre: "", descripcion: "" });
-    } catch (err) {
-      setError("Error al actualizar permiso");
+    } catch (err: any) {
       console.error("Error updating permission:", err);
+      // Manejar error específico del backend
+      if (err.response?.data?.error) {
+        setError(err.response.data.error);
+      } else if (err.message) {
+        setError(err.message);
+      } else {
+        setError("Error al actualizar permiso");
+      }
     } finally {
       setLoading(false);
     }
   };
 
   const handleDeletePermission = async (permissionId: number) => {
+    console.log("Attempting to delete permission:", permissionId);
     if (
       !window.confirm("¿Estás seguro de que quieres eliminar este permiso?")
     ) {
@@ -170,21 +178,31 @@ export default function PermissionsPage() {
       setError(null);
       await apiService.deletePermission(permissionId);
       await loadPermissions();
-    } catch (err) {
-      setError("Error al eliminar permiso");
+    } catch (err: any) {
       console.error("Error deleting permission:", err);
+      // Manejar error específico del backend
+      if (err.response?.data?.error) {
+        setError(err.response.data.error);
+      } else if (err.message) {
+        setError(err.message);
+      } else {
+        setError("Error al eliminar permiso");
+      }
     } finally {
       setLoading(false);
     }
   };
 
   const openEditModal = (permission: Permission) => {
+    console.log("Opening edit modal for permission:", permission);
+    console.log("Current showEditModal state:", showEditModal);
     setSelectedPermission(permission);
     setNewPermission({
       nombre: permission.nombre,
       descripcion: permission.descripcion,
     });
     setShowEditModal(true);
+    console.log("Edit modal should now be open");
   };
 
   const getModuleColor = (module: string) => {
@@ -430,16 +448,70 @@ export default function PermissionsPage() {
                       </div>
                       <div className={styles.permissionActions}>
                         <button
-                          onClick={() => openEditModal(permission)}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            console.log("=== EDIT BUTTON CLICKED ===");
+                            console.log("Permission:", permission);
+                            console.log("Permission ID:", permission.id);
+                            console.log("Permission name:", permission.nombre);
+                            console.log("Event:", e);
+                            console.log("Target:", e.target);
+                            console.log("Current target:", e.currentTarget);
+                            openEditModal(permission);
+                          }}
+                          onMouseDown={(e) => {
+                            console.log("=== EDIT BUTTON MOUSE DOWN ===");
+                            e.preventDefault();
+                            e.stopPropagation();
+                          }}
+                          onMouseUp={(e) => {
+                            console.log("=== EDIT BUTTON MOUSE UP ===");
+                            e.preventDefault();
+                            e.stopPropagation();
+                          }}
                           className={styles.actionButton}
                           title="Editar permiso"
+                          style={{
+                            pointerEvents: "auto",
+                            cursor: "pointer",
+                            zIndex: 9999,
+                            position: "relative",
+                          }}
                         >
                           <Edit size={16} />
                         </button>
                         <button
-                          onClick={() => handleDeletePermission(permission.id)}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            console.log("=== DELETE BUTTON CLICKED ===");
+                            console.log("Permission:", permission);
+                            console.log("Permission ID:", permission.id);
+                            console.log("Permission name:", permission.nombre);
+                            console.log("Event:", e);
+                            console.log("Target:", e.target);
+                            console.log("Current target:", e.currentTarget);
+                            handleDeletePermission(permission.id);
+                          }}
+                          onMouseDown={(e) => {
+                            console.log("=== DELETE BUTTON MOUSE DOWN ===");
+                            e.preventDefault();
+                            e.stopPropagation();
+                          }}
+                          onMouseUp={(e) => {
+                            console.log("=== DELETE BUTTON MOUSE UP ===");
+                            e.preventDefault();
+                            e.stopPropagation();
+                          }}
                           className={`${styles.actionButton} ${styles.deleteButton}`}
                           title="Eliminar permiso"
+                          style={{
+                            pointerEvents: "auto",
+                            cursor: "pointer",
+                            zIndex: 9999,
+                            position: "relative",
+                          }}
                         >
                           <Trash2 size={16} />
                         </button>

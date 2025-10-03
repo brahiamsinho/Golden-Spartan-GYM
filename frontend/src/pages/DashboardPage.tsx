@@ -3,7 +3,6 @@ import { Activity, Clock, User, Shield } from "lucide-react";
 import apiService from "../services/api";
 import styles from "./DashboardPage.module.css";
 
-
 interface DashboardStats {
   usuarios_activos_hoy: number;
   diferencia_usuarios: number;
@@ -113,7 +112,6 @@ export default function DashboardPage() {
         },
       ]
     : [];
-
 
   return (
     <div className={styles.dashboard}>

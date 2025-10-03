@@ -1,102 +1,136 @@
-import { useState } from 'react'
-import { Lock, Eye, EyeOff, Check, X } from 'lucide-react'
-import { useAuth } from '../../contexts/AuthContext'
-import styles from './ChangePasswordModal.module.css'
+import { useState } from "react";
+import { Lock, Eye, EyeOff, Check, X } from "lucide-react";
+import { useAuth } from "../../contexts/AuthContext";
+import styles from "./ChangePasswordModal.module.css";
 
 interface ChangePasswordModalProps {
-  isOpen: boolean
-  onClose: () => void
+  isOpen: boolean;
+  onClose: () => void;
 }
 
-export default function ChangePasswordModal({ isOpen, onClose }: ChangePasswordModalProps) {
-  const [currentPassword, setCurrentPassword] = useState('')
-  const [newPassword, setNewPassword] = useState('')
-  const [confirmPassword, setConfirmPassword] = useState('')
-  const [showCurrentPassword, setShowCurrentPassword] = useState(false)
-  const [showNewPassword, setShowNewPassword] = useState(false)
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
-  const [isLoading, setIsLoading] = useState(false)
-  const [error, setError] = useState('')
-  const [success, setSuccess] = useState(false)
+export default function ChangePasswordModal({
+  isOpen,
+  onClose,
+}: ChangePasswordModalProps) {
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState(false);
 
-  const { user } = useAuth()
+  const { user } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError('')
-    setIsLoading(true)
+    e.preventDefault();
+    setError("");
+    setIsLoading(true);
 
     // Validaciones
     if (!currentPassword) {
-      setError('La contraseña actual es requerida')
-      setIsLoading(false)
-      return
+      setError("La contraseña actual es requerida");
+      setIsLoading(false);
+      return;
     }
 
     if (!newPassword) {
-      setError('La nueva contraseña es requerida')
-      setIsLoading(false)
-      return
+      setError("La nueva contraseña es requerida");
+      setIsLoading(false);
+      return;
     }
 
     if (newPassword.length < 6) {
-      setError('La nueva contraseña debe tener al menos 6 caracteres')
-      setIsLoading(false)
-      return
+      setError("La nueva contraseña debe tener al menos 6 caracteres");
+      setIsLoading(false);
+      return;
     }
 
     if (newPassword !== confirmPassword) {
-      setError('Las nuevas contraseñas no coinciden')
-      setIsLoading(false)
-      return
+      setError("Las nuevas contraseñas no coinciden");
+      setIsLoading(false);
+      return;
     }
 
     if (currentPassword === newPassword) {
-      setError('La nueva contraseña debe ser diferente a la actual')
-      setIsLoading(false)
-      return
+      setError("La nueva contraseña debe ser diferente a la actual");
+      setIsLoading(false);
+      return;
     }
 
-    // Simular validación de contraseña actual
-    await new Promise(resolve => setTimeout(resolve, 1500))
+    try {
+      const token = localStorage.getItem("access_token");
+      if (!token) {
+        setError(
+          "No se encontró el token de autenticación. Por favor, inicia sesión nuevamente."
+        );
+        setIsLoading(false);
+        return;
+      }
 
-    // Para demo, validamos que la contraseña actual sea correcta
-    if (currentPassword !== 'admin') {
-      setError('La contraseña actual es incorrecta')
-      setIsLoading(false)
-      return
+      // Llamar a la API para cambiar la contraseña
+      const response = await fetch(
+        "http://localhost:8000/api/change-password/",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            current_password: currentPassword,
+            new_password: newPassword,
+          }),
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(
+          data.message || `Error ${response.status}: ${response.statusText}`
+        );
+      }
+
+      setSuccess(true);
+      setIsLoading(false);
+
+      setTimeout(() => {
+        setSuccess(false);
+        resetForm();
+        onClose();
+      }, 2000);
+    } catch (err: any) {
+      console.error("Error changing password:", err);
+      setError(
+        err.message ||
+          "Error al cambiar la contraseña. Verifica que el servidor esté funcionando."
+      );
+      setIsLoading(false);
     }
-
-    // Simular cambio de contraseña exitoso
-    setSuccess(true)
-    setIsLoading(false)
-
-    setTimeout(() => {
-      setSuccess(false)
-      resetForm()
-      onClose()
-    }, 2000)
-  }
+  };
 
   const resetForm = () => {
-    setCurrentPassword('')
-    setNewPassword('')
-    setConfirmPassword('')
-    setError('')
-    setSuccess(false)
-    setShowCurrentPassword(false)
-    setShowNewPassword(false)
-    setShowConfirmPassword(false)
-  }
+    setCurrentPassword("");
+    setNewPassword("");
+    setConfirmPassword("");
+    setError("");
+    setSuccess(false);
+    setShowCurrentPassword(false);
+    setShowNewPassword(false);
+    setShowConfirmPassword(false);
+  };
 
   const handleClose = () => {
     if (!isLoading) {
-      resetForm()
-      onClose()
+      resetForm();
+      onClose();
     }
-  }
+  };
 
-  if (!isOpen) return null
+  if (!isOpen) return null;
 
   return (
     <div className={styles.overlay} onClick={handleClose}>
@@ -106,8 +140,8 @@ export default function ChangePasswordModal({ isOpen, onClose }: ChangePasswordM
             <Lock size={20} />
             Cambiar Contraseña
           </h2>
-          <button 
-            onClick={handleClose} 
+          <button
+            onClick={handleClose}
             className={styles.closeButton}
             disabled={isLoading}
           >
@@ -126,7 +160,9 @@ export default function ChangePasswordModal({ isOpen, onClose }: ChangePasswordM
         ) : (
           <form onSubmit={handleSubmit} className={styles.form}>
             <div className={styles.userInfo}>
-              <p>Cambiar contraseña para: <strong>{user?.username}</strong></p>
+              <p>
+                Cambiar contraseña para: <strong>{user?.username}</strong>
+              </p>
             </div>
 
             {/* Contraseña Actual */}
@@ -148,7 +184,11 @@ export default function ChangePasswordModal({ isOpen, onClose }: ChangePasswordM
                   onClick={() => setShowCurrentPassword(!showCurrentPassword)}
                   className={styles.toggleButton}
                 >
-                  {showCurrentPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  {showCurrentPassword ? (
+                    <EyeOff size={18} />
+                  ) : (
+                    <Eye size={18} />
+                  )}
                 </button>
               </div>
             </div>
@@ -179,7 +219,9 @@ export default function ChangePasswordModal({ isOpen, onClose }: ChangePasswordM
 
             {/* Confirmar Nueva Contraseña */}
             <div className={styles.field}>
-              <label htmlFor="confirmPassword">Confirmar Nueva Contraseña *</label>
+              <label htmlFor="confirmPassword">
+                Confirmar Nueva Contraseña *
+              </label>
               <div className={styles.passwordWrapper}>
                 <Lock className={styles.inputIcon} size={18} />
                 <input
@@ -196,7 +238,11 @@ export default function ChangePasswordModal({ isOpen, onClose }: ChangePasswordM
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                   className={styles.toggleButton}
                 >
-                  {showConfirmPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                  {showConfirmPassword ? (
+                    <EyeOff size={18} />
+                  ) : (
+                    <Eye size={18} />
+                  )}
                 </button>
               </div>
             </div>
@@ -217,12 +263,12 @@ export default function ChangePasswordModal({ isOpen, onClose }: ChangePasswordM
                 className={styles.submitButton}
                 disabled={isLoading}
               >
-                {isLoading ? 'Cambiando...' : 'Cambiar Contraseña'}
+                {isLoading ? "Cambiando..." : "Cambiar Contraseña"}
               </button>
             </div>
           </form>
         )}
       </div>
     </div>
-  )
+  );
 }

@@ -30,6 +30,7 @@ from api.views import (
     get_user_info,
     logout_user,
     dashboard_stats,
+    change_password,
     forgot_password,
 )
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
@@ -52,5 +53,6 @@ urlpatterns = [
     path("api/user-info/", get_user_info, name="user_info"),
     path("api/logout/", logout_user, name="logout"),
     path("api/dashboard/stats/", dashboard_stats, name="dashboard_stats"),
+    path("api/change-password/", change_password, name="change_password"),
     path("api/forgot-password/", forgot_password, name="forgot_password"),
 ]

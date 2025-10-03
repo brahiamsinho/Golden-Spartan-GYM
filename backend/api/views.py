@@ -476,10 +476,13 @@ class PermisoViewSet(viewsets.ModelViewSet):
             permiso_id = permiso.id
 
             # Verificar si el permiso está siendo usado por algún rol
-            if RolPermiso.objects.filter(permiso=permiso).exists():
+            roles_usando_permiso = RolPermiso.objects.filter(permiso=permiso)
+            if roles_usando_permiso.exists():
+                # Obtener nombres de roles que usan este permiso
+                nombres_roles = [rp.rol.nombre for rp in roles_usando_permiso]
                 return Response(
                     {
-                        "error": "No se puede eliminar un permiso que está siendo usado por roles"
+                        "error": f"No se puede eliminar el permiso '{permiso_nombre}' porque está siendo usado por los siguientes roles: {', '.join(nombres_roles)}. Primero debe desasignar el permiso de estos roles."
                     },
                     status=status.HTTP_400_BAD_REQUEST,
                 )
@@ -819,6 +822,65 @@ def dashboard_stats(request):
     except Exception as e:
         return Response(
             {"error": f"Error al obtener estadísticas: {str(e)}"},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+
+@api_view(["POST"])
+@permission_classes([IsAuthenticated])
+def change_password(request):
+    """
+    Endpoint para cambiar la contraseña del usuario autenticado.
+    """
+    try:
+        current_password = request.data.get("current_password")
+        new_password = request.data.get("new_password")
+
+        if not current_password or not new_password:
+            return Response(
+                {
+                    "message": "La contraseña actual y la nueva contraseña son requeridas"
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Verificar la contraseña actual
+        if not request.user.check_password(current_password):
+            return Response(
+                {"message": "La contraseña actual es incorrecta"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Validar la nueva contraseña
+        if len(new_password) < 6:
+            return Response(
+                {"message": "La nueva contraseña debe tener al menos 6 caracteres"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Cambiar la contraseña
+        request.user.set_password(new_password)
+        request.user.save()
+
+        # Registrar en bitácora
+        Bitacora.log_activity(
+            usuario=request.user,
+            tipo_accion="change_password",
+            accion="Cambio de contraseña",
+            descripcion=f"Usuario {request.user.username} cambió su contraseña",
+            nivel="info",
+            ip_address=get_client_ip(request),
+            user_agent=request.META.get("HTTP_USER_AGENT", ""),
+            datos_adicionales={"user_id": request.user.id},
+        )
+
+        return Response(
+            {"message": "Contraseña cambiada exitosamente"}, status=status.HTTP_200_OK
+        )
+
+    except Exception as e:
+        return Response(
+            {"message": "Error interno del servidor"},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
 

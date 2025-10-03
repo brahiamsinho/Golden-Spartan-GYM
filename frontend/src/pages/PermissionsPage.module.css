@@ -488,11 +488,14 @@
   padding: 1.25rem;
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
-  overflow: hidden;
+  overflow: visible;
   backdrop-filter: blur(10px);
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   gap: 1rem;
+  justify-content: space-between;
+  cursor: default;
+  pointer-events: auto;
 }
 
 .permissionItem::before {
@@ -505,6 +508,8 @@
   background: linear-gradient(90deg, #3b82f6, #8b5cf6);
   opacity: 0;
   transition: opacity 0.3s ease;
+  pointer-events: none;
+  z-index: 1;
 }
 
 .permissionItem::after {
@@ -517,6 +522,8 @@
   background: linear-gradient(135deg, rgba(59, 130, 246, 0.05), rgba(139, 92, 246, 0.05));
   opacity: 0;
   transition: opacity 0.3s ease;
+  pointer-events: none;
+  z-index: 1;
 }
 
 .permissionItem:hover {
@@ -552,38 +559,175 @@
   box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
 }
 
+.permissionItem:hover .permissionActions {
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+.permissionItem:hover .actionButton {
+  opacity: 1 !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
+}
+
 .permissionActions {
-  display: flex;
+  display: flex !important;
   gap: 0.5rem;
   margin-left: auto;
   flex-shrink: 0;
+  opacity: 1 !important;
+  visibility: visible !important;
+  transition: opacity 0.3s ease;
+  pointer-events: auto !important;
+  position: relative;
+  z-index: 9998 !important;
+}
+
+.permissionActions button {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  pointer-events: auto !important;
+  user-select: none !important;
+  -webkit-user-select: none !important;
+  -moz-user-select: none !important;
+  -ms-user-select: none !important;
+  position: relative !important;
+  z-index: 9999 !important;
+  cursor: pointer !important;
+  background: rgba(59, 130, 246, 0.2) !important;
+  border: 2px solid #3b82f6 !important;
+}
+
+.permissionInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.permissionActions {
+  display: flex !important;
+  gap: 0.5rem;
+  margin-left: auto;
+  flex-shrink: 0;
+  opacity: 1 !important;
+  visibility: visible !important;
+  transition: opacity 0.3s ease;
+  pointer-events: auto !important;
+  position: relative;
+  z-index: 9998 !important;
 }
 
 .actionButton {
-  width: 32px;
-  height: 32px;
-  border: none;
+  width: 32px !important;
+  height: 32px !important;
+  border: 1px solid rgba(59, 130, 246, 0.4) !important;
   border-radius: 8px;
-  background: rgba(100, 116, 139, 0.2);
-  color: #94a3b8;
-  cursor: pointer;
-  display: flex;
+  background: rgba(59, 130, 246, 0.1) !important;
+  color: #3b82f6 !important;
+  cursor: pointer !important;
+  display: flex !important;
   align-items: center;
   justify-content: center;
   transition: all 0.3s ease;
   position: relative;
-  z-index: 1;
+  z-index: 9999 !important;
+  opacity: 1 !important;
+  visibility: visible !important;
+  min-width: 32px !important;
+  min-height: 32px !important;
+  font-size: 0 !important;
+  line-height: 0 !important;
+  pointer-events: auto !important;
+  user-select: none !important;
+  -webkit-user-select: none !important;
+  -moz-user-select: none !important;
+  -ms-user-select: none !important;
+  touch-action: manipulation !important;
+  -webkit-tap-highlight-color: transparent !important;
+  position: relative !important;
+}
+
+.actionButton svg {
+  width: 16px !important;
+  height: 16px !important;
+  display: block !important;
+  flex-shrink: 0 !important;
+  pointer-events: none !important;
+  position: relative;
+  z-index: 1002 !important;
+  -webkit-tap-highlight-color: transparent !important;
+}
+
+.actionButton:focus {
+  outline: 2px solid rgba(59, 130, 246, 0.5) !important;
+  outline-offset: 2px !important;
+  pointer-events: auto !important;
+  cursor: pointer !important;
+}
+
+.actionButton:disabled {
+  opacity: 0.5 !important;
+  cursor: not-allowed !important;
+  pointer-events: none !important;
+}
+
+.actionButton:not(:disabled) {
+  pointer-events: auto !important;
+  cursor: pointer !important;
+}
+
+.actionButton:not(:disabled):hover {
+  pointer-events: auto !important;
+  cursor: pointer !important;
+}
+
+.actionButton:not(:disabled):active {
+  pointer-events: auto !important;
+  cursor: pointer !important;
 }
 
 .actionButton:hover {
-  background: rgba(59, 130, 246, 0.2);
-  color: #3b82f6;
+  background: rgba(59, 130, 246, 0.3) !important;
+  color: #3b82f6 !important;
+  border-color: rgba(59, 130, 246, 0.6) !important;
   transform: scale(1.1);
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3) !important;
+  pointer-events: auto !important;
+}
+
+.actionButton:active {
+  transform: scale(0.95);
+  pointer-events: auto !important;
+  cursor: pointer !important;
+}
+
+.actionButton:focus {
+  outline: 2px solid rgba(59, 130, 246, 0.5) !important;
+  outline-offset: 2px !important;
+  pointer-events: auto !important;
+  cursor: pointer !important;
+}
+
+.deleteButton {
+  background: rgba(239, 68, 68, 0.2) !important;
+  color: #ef4444 !important;
+  border-color: rgba(239, 68, 68, 0.3) !important;
+  pointer-events: auto !important;
+  cursor: pointer !important;
 }
 
 .deleteButton:hover {
-  background: rgba(239, 68, 68, 0.2);
-  color: #ef4444;
+  background: rgba(239, 68, 68, 0.3) !important;
+  color: #ef4444 !important;
+  border-color: rgba(239, 68, 68, 0.5) !important;
+  pointer-events: auto !important;
+  cursor: pointer !important;
+}
+
+.deleteButton:active {
+  transform: scale(0.95);
+  pointer-events: auto !important;
+  cursor: pointer !important;
 }
 
 .permissionName {
@@ -954,4 +1098,33 @@
   .header h1 {
     font-size: 1.75rem;
   }
+}
+
+/* Forzar que los botones sean clickeables - SOLUCIÓN DEFINITIVA */
+.actionButton,
+.actionButton *,
+.actionButton svg,
+.actionButton:hover,
+.actionButton:active,
+.actionButton:focus {
+  pointer-events: auto !important;
+  cursor: pointer !important;
+  z-index: 9999 !important;
+  position: relative !important;
+}
+
+/* Asegurar que no hay elementos superpuestos */
+.permissionItem {
+  position: relative !important;
+  z-index: 1 !important;
+}
+
+.permissionActions {
+  position: relative !important;
+  z-index: 9998 !important;
+}
+
+.permissionActions button {
+  position: relative !important;
+  z-index: 9999 !important;
 }

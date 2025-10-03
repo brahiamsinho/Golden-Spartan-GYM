@@ -1,7 +1,6 @@
 import { createContext, useContext, useState, useEffect } from "react";
 import type { ReactNode } from "react";
 
-
 interface Role {
   id: string;
   name: string;
@@ -85,7 +84,7 @@ export function PermissionsProvider({
   useEffect(() => {
     if (user) {
       // Determinar el rol basado en los datos del usuario
-      let roleName = "Super Administrador"; // Por defecto
+      let roleName = null;
 
       if (user.roles && user.roles.length > 0) {
         roleName = user.roles[0].nombre;
@@ -93,8 +92,43 @@ export function PermissionsProvider({
         roleName = user.role;
       }
 
-      const role =
-        SYSTEM_ROLES[roleName] || SYSTEM_ROLES["Super Administrador"];
+      // Si no tiene roles asignados, crear un rol vacío
+      if (!roleName) {
+        console.log("User has no roles assigned:", user);
+        setCurrentUser({
+          id: String(user.id),
+          username: user.username,
+          email: user.email || `${user.username}@gym.com`,
+          role: {
+            id: "no_role",
+            name: "Sin Rol",
+            description: "Usuario sin roles asignados",
+            permissions: [],
+          },
+          isActive: true,
+        });
+        return;
+      }
+
+      const role = SYSTEM_ROLES[roleName];
+
+      // Si el rol no existe en el sistema, crear un rol vacío
+      if (!role) {
+        console.log("User role not found in system:", roleName);
+        setCurrentUser({
+          id: String(user.id),
+          username: user.username,
+          email: user.email || `${user.username}@gym.com`,
+          role: {
+            id: "unknown_role",
+            name: roleName,
+            description: "Rol no reconocido en el sistema",
+            permissions: [],
+          },
+          isActive: true,
+        });
+        return;
+      }
 
       setCurrentUser({
         id: String(user.id),
@@ -109,12 +143,47 @@ export function PermissionsProvider({
   }, [user]);
 
   const hasPermission = (permissionId: string): boolean => {
-    if (!currentUser) return false;
-    return currentUser.role.permissions.includes(permissionId);
+    if (!currentUser) {
+      console.log("No current user, denying permission:", permissionId);
+      return false;
+    }
+
+    // Si no tiene roles o tiene roles vacíos, denegar acceso
+    if (
+      currentUser.role.id === "no_role" ||
+      currentUser.role.id === "unknown_role" ||
+      currentUser.role.permissions.length === 0
+    ) {
+      console.log(
+        "User has no valid role or permissions, denying access to:",
+        permissionId
+      );
+      return false;
+    }
+
+    const hasAccess = currentUser.role.permissions.includes(permissionId);
+    console.log(
+      `Permission check for "${permissionId}":`,
+      hasAccess,
+      "User permissions:",
+      currentUser.role.permissions
+    );
+
+    return hasAccess;
   };
 
   const hasAnyPermission = (permissionIds: string[]): boolean => {
     if (!currentUser) return false;
+
+    // Si no tiene roles o tiene roles vacíos, denegar acceso
+    if (
+      currentUser.role.id === "no_role" ||
+      currentUser.role.id === "unknown_role" ||
+      currentUser.role.permissions.length === 0
+    ) {
+      return false;
+    }
+
     return permissionIds.some((permissionId) =>
       currentUser.role.permissions.includes(permissionId)
     );
@@ -122,6 +191,16 @@ export function PermissionsProvider({
 
   const hasAllPermissions = (permissionIds: string[]): boolean => {
     if (!currentUser) return false;
+
+    // Si no tiene roles o tiene roles vacíos, denegar acceso
+    if (
+      currentUser.role.id === "no_role" ||
+      currentUser.role.id === "unknown_role" ||
+      currentUser.role.permissions.length === 0
+    ) {
+      return false;
+    }
+
     return permissionIds.every((permissionId) =>
       currentUser.role.permissions.includes(permissionId)
     );
