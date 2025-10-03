@@ -78,16 +78,38 @@ class RolPermisoSeeder(BaseSeeder):
         for perm in instructor_permisos:
             RolPermiso.objects.get_or_create(rol=instructor, permiso=perm)
             
-        # Asignar rol de SuperAdmin al usuario admin existente
+        # Crear o actualizar el usuario admin (superusuario)
         try:
-            admin_user = User.objects.get(username="admin")
+            admin_user, created = User.objects.get_or_create(
+                username="admin",
+                defaults={
+                    "email": "admin@goldenspartan.com",
+                    "first_name": "Super",
+                    "last_name": "Admin",
+                    "is_staff": True,
+                    "is_superuser": True
+                }
+            )
+            
+            # Asegurarse de que el usuario tenga la contraseña correcta
+            admin_user.set_password("admin")
+            admin_user.is_staff = True
+            admin_user.is_superuser = True
+            admin_user.save()
+            
+            if created:
+                self.stdout.write(self.style.SUCCESS(f"Usuario administrador Django creado: admin/admin"))
+            else:
+                self.stdout.write(self.style.SUCCESS(f"Contraseña del usuario admin restablecida a: admin"))
+                
+            # Asignar rol de SuperAdmin
             UsuarioRol.objects.get_or_create(
                 usuario=admin_user,
                 rol=super_admin
             )
             self.stdout.write(self.style.SUCCESS(f"Usuario {admin_user.username} asignado como SuperAdmin"))
-        except User.DoesNotExist:
-            self.stdout.write(self.style.WARNING("Usuario admin no encontrado"))
+        except Exception as e:
+            self.stdout.write(self.style.ERROR(f"Error al crear/actualizar usuario admin: {str(e)}"))
             
         # Crear usuarios de ejemplo para cada rol
         self.create_example_users(super_admin, admin, instructor)
