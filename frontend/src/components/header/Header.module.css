@@ -196,6 +196,27 @@
     margin: 0;
 }
 
+.changePasswordButton {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1.5rem;
+    background: none;
+    border: none;
+    color: #3b82f6;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: left;
+}
+
+.changePasswordButton:hover {
+    background: #eff6ff;
+    color: #1d4ed8;
+}
+
 .logoutButton {
     width: 100%;
     display: flex;

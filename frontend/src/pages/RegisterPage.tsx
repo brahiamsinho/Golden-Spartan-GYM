@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { User, Lock, Mail, Shield, Save, X } from "lucide-react";
+import { User, Lock, Mail, Shield, Save, X, CheckCircle } from "lucide-react";
 import styles from "./RegisterPage.module.css";
 
 interface UserFormData {
@@ -156,7 +156,9 @@ export default function RegisterPage() {
 
       {successMessage && (
         <div className={styles.successMessage}>
-          <div className={styles.successIcon}>✓</div>
+          <div className={styles.successIcon}>
+            <CheckCircle size={20} />
+          </div>
           {successMessage}
         </div>
       )}

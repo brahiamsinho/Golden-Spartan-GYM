@@ -12,6 +12,7 @@ import {
   Trash2,
   Plus,
   X,
+  AlertTriangle,
 } from "lucide-react";
 import styles from "./PermissionsPage.module.css";
 
@@ -704,7 +705,9 @@ export default function PermissionsPage() {
 
             <div className={styles.modalBody}>
               <div className={styles.deleteWarning}>
-                <div className={styles.warningIcon}>⚠️</div>
+                <div className={styles.warningIcon}>
+                  <AlertTriangle size={24} />
+                </div>
                 <div>
                   <p>
                     ¿Estás seguro de que quieres eliminar el permiso{" "}

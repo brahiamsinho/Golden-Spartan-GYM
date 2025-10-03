@@ -3,12 +3,13 @@ import {
   Search,
   Plus,
   Filter,
-  MoreVertical,
   Edit,
   Trash2,
   Shield,
   User,
   Clock,
+  X,
+  AlertTriangle,
 } from "lucide-react";
 import RegisterUserModal from "../components/modals/RegisterUserModal";
 import EditUserModal from "../components/modals/EditUserModal";
@@ -28,6 +29,12 @@ interface Usuario {
   permisos?: string[];
 }
 
+interface Role {
+  id: number;
+  nombre: string;
+  descripcion: string;
+}
+
 interface UserFormData {
   username: string;
   email: string;
@@ -44,6 +51,7 @@ export default function UsersPage() {
   const [filterRole, setFilterRole] = useState<string>("all");
   const [showRegisterModal, setShowRegisterModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState<Usuario | null>(null);
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
   const [loading, setLoading] = useState(true);
@@ -74,9 +82,9 @@ export default function UsersPage() {
   const handleUserRegistered = async (newUser: UserFormData) => {
     try {
       // Obtener roles disponibles
-      const roles = await apiService.getRoles();
+      const roles: Role[] = await apiService.getRoles();
 
-      const selectedRole = roles.find((r: any) => r.nombre === newUser.role);
+      const selectedRole = roles.find((r) => r.nombre === newUser.role);
 
       if (!selectedRole) {
         throw new Error(`Rol '${newUser.role}' no encontrado`);
@@ -92,7 +100,7 @@ export default function UsersPage() {
         rol: selectedRole.id, // ID del rol
       };
 
-      const createdUser = await apiService.createUser(userData);
+      await apiService.createUser(userData);
 
       // Recargar la lista de usuarios
       await loadUsers();
@@ -111,14 +119,19 @@ export default function UsersPage() {
     setShowEditModal(true);
   };
 
-  const handleDeleteUser = async (userId: number) => {
-    if (!confirm("¿Estás seguro de que quieres eliminar este usuario?")) {
-      return;
-    }
+  const openDeleteModal = (user: Usuario) => {
+    setSelectedUser(user);
+    setShowDeleteModal(true);
+  };
+
+  const handleDeleteUser = async () => {
+    if (!selectedUser) return;
 
     try {
-      await apiService.deleteUser(userId.toString());
+      await apiService.deleteUser(selectedUser.id.toString());
       await loadUsers();
+      setShowDeleteModal(false);
+      setSelectedUser(null);
     } catch (error) {
       console.error("Error eliminando usuario:", error);
       setError("Error al eliminar usuario");
@@ -347,18 +360,12 @@ export default function UsersPage() {
                         <Edit size={16} />
                       </button>
                       <button
-                        onClick={() => handleDeleteUser(usuario.id)}
+                        onClick={() => openDeleteModal(usuario)}
                         className={styles.actionButton}
                         title="Eliminar usuario"
                         disabled={usuario.username === "admin"}
                       >
                         <Trash2 size={16} />
-                      </button>
-                      <button
-                        className={styles.actionButton}
-                        title="Más opciones"
-                      >
-                        <MoreVertical size={16} />
                       </button>
                     </div>
                   </td>
@@ -369,18 +376,20 @@ export default function UsersPage() {
         </table>
       </div>
 
-      <div className={styles.pagination}>
-        <span>
-          Mostrando {filteredUsuarios.length} de {usuarios.length} usuarios
-        </span>
-        <div className={styles.paginationButtons}>
-          <button>Anterior</button>
-          <button className={styles.active}>1</button>
-          <button>2</button>
-          <button>3</button>
-          <button>Siguiente</button>
+      {usuarios.length > 10 && (
+        <div className={styles.pagination}>
+          <span>
+            Mostrando {filteredUsuarios.length} de {usuarios.length} usuarios
+          </span>
+          <div className={styles.paginationButtons}>
+            <button>Anterior</button>
+            <button className={styles.active}>1</button>
+            <button>2</button>
+            <button>3</button>
+            <button>Siguiente</button>
+          </div>
         </div>
-      </div>
+      )}
 
       <RegisterUserModal
         isOpen={showRegisterModal}
@@ -394,6 +403,65 @@ export default function UsersPage() {
         user={selectedUser}
         onUserUpdated={handleUserUpdated}
       />
+
+      {/* Modal Eliminar Usuario */}
+      {showDeleteModal && selectedUser && (
+        <div className={styles.modal}>
+          <div className={styles.modalContent}>
+            <div className={styles.modalHeader}>
+              <h2>Eliminar Usuario</h2>
+              <button
+                onClick={() => setShowDeleteModal(false)}
+                className={styles.closeButton}
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className={styles.modalBody}>
+              <div className={styles.deleteWarning}>
+                <div className={styles.warningIcon}>
+                  <AlertTriangle size={24} />
+                </div>
+                <div>
+                  <p>
+                    ¿Estás seguro de que quieres eliminar el usuario{" "}
+                    <strong>"{getDisplayName(selectedUser)}"</strong>?
+                  </p>
+                  <p className={styles.warningText}>
+                    Esta acción eliminará permanentemente:
+                  </p>
+                  <ul className={styles.warningList}>
+                    <li>Todos los datos del usuario</li>
+                    <li>Su historial de actividades</li>
+                    <li>Sus permisos y roles asignados</li>
+                  </ul>
+                  <p className={styles.errorText}>
+                    Esta acción no se puede deshacer.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className={styles.modalFooter}>
+              <button
+                onClick={() => setShowDeleteModal(false)}
+                className={styles.cancelButton}
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={handleDeleteUser}
+                className={styles.deleteButton}
+                disabled={selectedUser.username === "admin"}
+              >
+                <Trash2 size={16} />
+                Eliminar Usuario
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -11,6 +11,7 @@ import {
   Search,
   Calendar,
   Activity,
+  AlertTriangle,
 } from "lucide-react";
 import styles from "./RolesPage.module.css";
 import apiService from "../services/api";
@@ -545,7 +546,9 @@ export default function RolesPage() {
 
             <div className={styles.modalBody}>
               <div className={styles.deleteWarning}>
-                <div className={styles.warningIcon}>⚠️</div>
+                <div className={styles.warningIcon}>
+                  <AlertTriangle size={24} />
+                </div>
                 <div>
                   <p>
                     ¿Estás seguro de que quieres eliminar el rol{" "}

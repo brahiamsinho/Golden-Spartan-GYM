@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { User, LogOut, ChevronDown } from "lucide-react";
+import { User, LogOut, ChevronDown, Key } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
+import ChangePasswordModal from "../modals/ChangePasswordModal";
 import styles from "./Header.module.css";
 
 interface HeaderProps {
@@ -10,6 +11,7 @@ interface HeaderProps {
 export default function Header({ onLogout }: HeaderProps) {
   const { user } = useAuth();
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [showChangePasswordModal, setShowChangePasswordModal] = useState(false);
 
   const getRoleColor = (roleName: string) => {
     switch (roleName) {
@@ -105,6 +107,17 @@ export default function Header({ onLogout }: HeaderProps) {
 
               <div className={styles.userMenuDivider} />
 
+              <button 
+                className={styles.changePasswordButton} 
+                onClick={() => {
+                  setShowChangePasswordModal(true);
+                  setShowUserMenu(false);
+                }}
+              >
+                <Key size={16} />
+                Cambiar Contraseña
+              </button>
+
               <button className={styles.logoutButton} onClick={onLogout}>
                 <LogOut size={16} />
                 Cerrar Sesión
@@ -113,6 +126,11 @@ export default function Header({ onLogout }: HeaderProps) {
           )}
         </div>
       </div>
+
+      <ChangePasswordModal
+        isOpen={showChangePasswordModal}
+        onClose={() => setShowChangePasswordModal(false)}
+      />
     </header>
   );
 }

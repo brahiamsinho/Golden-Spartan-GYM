@@ -29,6 +29,7 @@ from api.views import (
     registrar_bitacora,
     get_user_info,
     logout_user,
+    forgot_password,
 )
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
@@ -49,4 +50,5 @@ urlpatterns = [
     path("api/registrar-bitacora/", registrar_bitacora, name="registrar_bitacora"),
     path("api/user-info/", get_user_info, name="user_info"),
     path("api/logout/", logout_user, name="logout"),
+    path("api/forgot-password/", forgot_password, name="forgot_password"),
 ]

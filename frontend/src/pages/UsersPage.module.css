@@ -544,3 +544,155 @@
     font-size: 0.8rem;
   }
 }
+
+/* Modal Styles */
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 2rem;
+}
+
+.modalContent {
+  background: #1e293b;
+  border-radius: 12px;
+  max-width: 500px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
+  border: 1px solid #334155;
+}
+
+.modalHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem 2rem;
+  border-bottom: 1px solid #334155;
+}
+
+.modalHeader h2 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: white;
+  margin: 0;
+}
+
+.closeButton {
+  width: 40px;
+  height: 40px;
+  border: none;
+  background: #334155;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  color: #94a3b8;
+}
+
+.closeButton:hover {
+  background: #475569;
+  color: white;
+}
+
+.modalBody {
+  padding: 2rem;
+}
+
+.modalFooter {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  padding: 1.5rem 2rem;
+  border-top: 1px solid #334155;
+  background: #0f172a;
+}
+
+.cancelButton {
+  padding: 0.75rem 1.5rem;
+  background: #374151;
+  color: #94a3b8;
+  border: 1px solid #475569;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.cancelButton:hover {
+  background: #475569;
+  color: white;
+}
+
+.deleteButton {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  background: #ef4444;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.deleteButton:hover:not(:disabled) {
+  background: #dc2626;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 20px rgba(239, 68, 68, 0.3);
+}
+
+.deleteButton:disabled {
+  background: #6b7280;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.deleteWarning {
+  display: flex;
+  gap: 1rem;
+  padding: 1rem;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 8px;
+}
+
+.warningIcon {
+  color: #ef4444;
+  flex-shrink: 0;
+}
+
+.warningText {
+  color: #e2e8f0;
+  font-weight: 500;
+  margin: 0.5rem 0;
+}
+
+.warningList {
+  color: #cbd5e1;
+  margin: 0.5rem 0;
+  padding-left: 1.5rem;
+}
+
+.warningList li {
+  margin-bottom: 0.25rem;
+}
+
+.errorText {
+  color: #ef4444;
+  font-weight: 500;
+  margin-top: 0.5rem;
+}

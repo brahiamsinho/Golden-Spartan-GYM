@@ -2,6 +2,7 @@ import type React from "react";
 import { useState, useEffect } from "react";
 import { Lock, Eye, EyeOff, Loader2 } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
+import ForgotPasswordModal from "../modals/ForgotPasswordModal";
 import styles from "./login-form.module.css";
 
 interface LoginFormProps {
@@ -13,6 +14,7 @@ export default function LoginForm({ apiConnected = false }: LoginFormProps) {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState<string[]>([]);
+  const [showForgotPasswordModal, setShowForgotPasswordModal] = useState(false);
 
   const { login, isLoading } = useAuth();
 
@@ -124,8 +126,24 @@ export default function LoginForm({ apiConnected = false }: LoginFormProps) {
               "Iniciar sesión"
             )}
           </button>
+
+          {/* Enlace de Olvidaste Contraseña */}
+          <div className={styles.forgotPassword}>
+            <button
+              type="button"
+              onClick={() => setShowForgotPasswordModal(true)}
+              className={styles.forgotPasswordLink}
+            >
+              ¿Olvidaste tu contraseña?
+            </button>
+          </div>
         </form>
       </div>
+
+      <ForgotPasswordModal
+        isOpen={showForgotPasswordModal}
+        onClose={() => setShowForgotPasswordModal(false)}
+      />
     </div>
   );
 }

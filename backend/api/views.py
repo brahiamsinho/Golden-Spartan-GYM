@@ -593,3 +593,63 @@ def get_client_ip(request):
     else:
         ip = request.META.get("REMOTE_ADDR", "0.0.0.0")
     return ip
+
+
+@api_view(['POST'])
+@permission_classes([])  # No requiere autenticación
+def forgot_password(request):
+    """
+    Endpoint para solicitar restablecimiento de contraseña.
+    Simula el envío de email (en un entorno real enviaría un email).
+    """
+    try:
+        email = request.data.get('email')
+        
+        if not email:
+            return Response(
+                {"message": "El email es requerido"}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Buscar usuario por email
+        try:
+            user = User.objects.get(email=email)
+            
+            # Registrar en bitácora
+            Bitacora.objects.create(
+                usuario=user,
+                accion="Solicitud de restablecimiento de contraseña",
+                detalles=f"Solicitud para email: {email}",
+                ip=get_client_ip(request),
+                timestamp=timezone.now()
+            )
+            
+            # En un entorno real, aquí se enviaría un email con un token
+            # Por ahora solo simulamos el éxito
+            return Response(
+                {"message": "Se han enviado las instrucciones a tu email"}, 
+                status=status.HTTP_200_OK
+            )
+            
+        except User.DoesNotExist:
+            # Por seguridad, no revelamos si el email existe o no
+            # Pero registramos el intento en bitácora
+            Bitacora.objects.create(
+                usuario=None,
+                accion="Intento de restablecimiento con email inexistente",
+                detalles=f"Email consultado: {email}",
+                ip=get_client_ip(request),
+                timestamp=timezone.now()
+            )
+            
+            # Respondemos como si hubiera éxito para no revelar información
+            return Response(
+                {"message": "Se han enviado las instrucciones a tu email"}, 
+                status=status.HTTP_200_OK
+            )
+            
+    except Exception as e:
+        return Response(
+            {"message": "Error interno del servidor"}, 
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
