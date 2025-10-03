@@ -19,7 +19,7 @@ function AppContent() {
       <div className={styles.content}>
         <GymImageSide />
         <div className={styles.formSide}>
-          <LoginForm />
+          <LoginForm apiConnected={true} />
         </div>
       </div>
     </div>

@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useAuth } from "../../contexts/AuthContext";
 import { PermissionsProvider } from "../../contexts/PermissionsContext";
 import Sidebar from "../navigation/Sidebar";
+import Header from "../header/Header";
 import DashboardPage from "../../pages/DashboardPage";
 import UsersPage from "../../pages/UsersPage";
 import RolesPage from "../../pages/RolesPage";
@@ -19,6 +20,7 @@ export default function Dashboard() {
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   // Check if we're on mobile
   useEffect(() => {
@@ -67,6 +69,14 @@ export default function Dashboard() {
     }, 2000);
   };
 
+  const handleSidebarToggle = () => {
+    if (isMobile) {
+      setIsMobileSidebarOpen(!isMobileSidebarOpen);
+    } else {
+      setIsSidebarCollapsed(!isSidebarCollapsed);
+    }
+  };
+
   const renderCurrentPage = () => {
     switch (currentPage) {
       case "dashboard":
@@ -89,7 +99,7 @@ export default function Dashboard() {
       <div
         className={`${styles.container} ${
           isMobileSidebarOpen ? styles.sidebarOpen : ""
-        }`}
+        } ${isSidebarCollapsed ? styles.sidebarCollapsed : ""}`}
       >
         <Sidebar
           currentPage={currentPage}
@@ -97,25 +107,31 @@ export default function Dashboard() {
           onLogout={handleLogout}
           isMobileOpen={isMobileSidebarOpen}
           onMobileClose={() => setIsMobileSidebarOpen(false)}
+          isCollapsed={isSidebarCollapsed}
+          onToggle={handleSidebarToggle}
         />
 
-        <main className={styles.main} onClick={handleMainClick}>
-          {isMobile && (
-            <div className={styles.mobileHeader}>
-              <button
-                className={styles.menuButton}
-                onClick={(e) => {
-                  e.stopPropagation(); // Prevent triggering handleMainClick
-                  toggleMobileSidebar();
-                }}
-              >
-                <Menu size={24} />
-              </button>
-              <h2>Golden Spartan GYM</h2>
-            </div>
-          )}
-          <div className={styles.content}>{renderCurrentPage()}</div>
-        </main>
+        <div className={styles.contentWrapper}>
+          <Header onLogout={handleLogout} />
+
+          <main className={styles.main} onClick={handleMainClick}>
+            {isMobile && (
+              <div className={styles.mobileHeader}>
+                <button
+                  className={styles.menuButton}
+                  onClick={(e) => {
+                    e.stopPropagation(); // Prevent triggering handleMainClick
+                    handleSidebarToggle();
+                  }}
+                >
+                  <Menu size={24} />
+                </button>
+                <h2>Golden Spartan GYM</h2>
+              </div>
+            )}
+            <div className={styles.content}>{renderCurrentPage()}</div>
+          </main>
+        </div>
 
         <LogoutModal
           isOpen={showLogoutModal}

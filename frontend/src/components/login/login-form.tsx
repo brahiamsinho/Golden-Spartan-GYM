@@ -1,10 +1,14 @@
 import type React from "react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Lock, Eye, EyeOff, Loader2 } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
 import styles from "./login-form.module.css";
 
-export default function LoginForm() {
+interface LoginFormProps {
+  apiConnected?: boolean;
+}
+
+export default function LoginForm({ apiConnected = false }: LoginFormProps) {
   const [usuario, setUsuario] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -18,15 +22,27 @@ export default function LoginForm() {
 
     if (!usuario) newErrors.push("Usuario requerido");
     if (!password) newErrors.push("Contraseña requerida");
-    // Eliminamos la validación de longitud mínima para permitir la contraseña "admin"
-    // if (password && password.length < 8) newErrors.push("Mínimo 8 caracteres")
+
+    // Verificar si la API está conectada
+    if (!apiConnected) {
+      newErrors.push("El servidor no está disponible. Verifica la conexión.");
+    }
 
     setErrors(newErrors);
 
     if (newErrors.length === 0) {
-      const success = await login(usuario, password);
-      if (!success) {
-        setErrors(["Credenciales incorrectas. Intenta con admin/admin"]);
+      try {
+        const success = await login(usuario, password);
+        if (!success) {
+          setErrors([
+            "Credenciales incorrectas. Verifica tu usuario y contraseña.",
+          ]);
+        }
+      } catch (error) {
+        console.error("Error al iniciar sesión:", error);
+        setErrors([
+          "Error de conexión con el servidor. Verifica que el backend esté en ejecución.",
+        ]);
       }
     }
   };

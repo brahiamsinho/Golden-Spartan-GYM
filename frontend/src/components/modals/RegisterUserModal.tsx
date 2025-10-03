@@ -1,142 +1,189 @@
-import { useState } from 'react'
-import { User, Lock, Mail, Shield, Save, X } from 'lucide-react'
-import styles from './RegisterUserModal.module.css'
+import { useState, useEffect } from "react";
+import { User, Lock, Mail, Shield, Save, X } from "lucide-react";
+import apiService from "../../services/api";
+import styles from "./RegisterUserModal.module.css";
 
 interface UserFormData {
-  username: string
-  email: string
-  password: string
-  confirmPassword: string
-  role: 'administrador' | 'entrenador' ;
-  firstName: string
-  lastName: string
-  phone: string
+  username: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
+  role: string;
+  firstName: string;
+  lastName: string;
+  phone: string;
+}
+
+interface Role {
+  id: number;
+  nombre: string;
+  descripcion: string;
 }
 
 interface RegisterUserModalProps {
-  isOpen: boolean
-  onClose: () => void
-  onUserRegistered: (user: UserFormData) => void
+  isOpen: boolean;
+  onClose: () => void;
+  onUserRegistered: (user: UserFormData) => void;
 }
 
-export default function RegisterUserModal({ isOpen, onClose, onUserRegistered }: RegisterUserModalProps) {
+export default function RegisterUserModal({
+  isOpen,
+  onClose,
+  onUserRegistered,
+}: RegisterUserModalProps) {
   const [formData, setFormData] = useState<UserFormData>({
-    username: '',
-    email: '',
-    password: '',
-    confirmPassword: '',
-    role: 'administrador',
-    firstName: '',
-    lastName: '',
-    phone: ''
-  })
+    username: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+    role: "",
+    firstName: "",
+    lastName: "",
+    phone: "",
+  });
 
-  const [errors, setErrors] = useState<Partial<UserFormData>>({})
-  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [errors, setErrors] = useState<Partial<UserFormData>>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [roles, setRoles] = useState<Role[]>([]);
+  const [loadingRoles, setLoadingRoles] = useState(true);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    const { name, value } = e.target
-    setFormData(prev => ({
+  // Cargar roles del backend
+  useEffect(() => {
+    const loadRoles = async () => {
+      try {
+        setLoadingRoles(true);
+        const rolesData = await apiService.getRoles();
+        setRoles(rolesData);
+        // Seleccionar el primer rol por defecto
+        if (rolesData.length > 0) {
+          setFormData((prev) => ({ ...prev, role: rolesData[0].nombre }));
+        }
+      } catch (error) {
+        console.error("Error cargando roles:", error);
+        setRoles([]);
+      } finally {
+        setLoadingRoles(false);
+      }
+    };
+
+    if (isOpen) {
+      loadRoles();
+    }
+  }, [isOpen]);
+
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({
       ...prev,
-      [name]: value
-    }))
+      [name]: value,
+    }));
     // Limpiar error cuando el usuario empiece a escribir
     if (errors[name as keyof UserFormData]) {
-      setErrors(prev => ({
+      setErrors((prev) => ({
         ...prev,
-        [name]: ''
-      }))
+        [name]: "",
+      }));
     }
-  }
+  };
 
   const validateForm = (): boolean => {
-    const newErrors: Partial<UserFormData> = {}
+    const newErrors: Partial<UserFormData> = {};
 
     // Validar campos requeridos
-    if (!formData.username.trim()) newErrors.username = 'El nombre de usuario es requerido'
-    if (!formData.email.trim()) newErrors.email = 'El email es requerido'
-    if (!formData.password.trim()) newErrors.password = 'La contraseña es requerida'
-    if (!formData.confirmPassword.trim()) newErrors.confirmPassword = 'Confirmar contraseña es requerido'
-    if (!formData.firstName.trim()) newErrors.firstName = 'El nombre es requerido'
-    if (!formData.lastName.trim()) newErrors.lastName = 'El apellido es requerido'
+    if (!formData.username.trim())
+      newErrors.username = "El nombre de usuario es requerido";
+    if (!formData.email.trim()) newErrors.email = "El email es requerido";
+    if (!formData.password.trim())
+      newErrors.password = "La contraseña es requerida";
+    if (!formData.confirmPassword.trim())
+      newErrors.confirmPassword = "Confirmar contraseña es requerido";
+    if (!formData.firstName.trim())
+      newErrors.firstName = "El nombre es requerido";
+    if (!formData.lastName.trim())
+      newErrors.lastName = "El apellido es requerido";
 
     // Validar email
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (formData.email && !emailRegex.test(formData.email)) {
-      newErrors.email = 'Email inválido'
+      newErrors.email = "Email inválido";
     }
 
     // Validar contraseña
     if (formData.password && formData.password.length < 6) {
-      newErrors.password = 'La contraseña debe tener al menos 6 caracteres'
+      newErrors.password = "La contraseña debe tener al menos 6 caracteres";
     }
 
     // Validar confirmación de contraseña
     if (formData.password !== formData.confirmPassword) {
-      newErrors.confirmPassword = 'Las contraseñas no coinciden'
+      newErrors.confirmPassword = "Las contraseñas no coinciden";
     }
 
     // Validar username único (simulación)
-    if (formData.username && (formData.username === 'admin' || formData.username === 'usuario1')) {
-      newErrors.username = 'Este nombre de usuario ya existe'
+    if (
+      formData.username &&
+      (formData.username === "admin" || formData.username === "usuario1")
+    ) {
+      newErrors.username = "Este nombre de usuario ya existe";
     }
 
-    setErrors(newErrors)
-    return Object.keys(newErrors).length === 0
-  }
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    
-    if (!validateForm()) return
+    e.preventDefault();
 
-    setIsSubmitting(true)
-    
+    if (!validateForm()) return;
+
+    setIsSubmitting(true);
+
     // Simular llamada a API
     try {
-      await new Promise(resolve => setTimeout(resolve, 1500))
-      
-      console.log('Usuario registrado:', formData)
-      onUserRegistered(formData)
-      
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+
+      console.log("Usuario registrado:", formData);
+      onUserRegistered(formData);
+
       // Resetear formulario
       setFormData({
-        username: '',
-        email: '',
-        password: '',
-        confirmPassword: '',
-        role: 'administrador',
-        firstName: '',
-        lastName: '',
-        phone: ''
-      })
-      setErrors({})
-      onClose()
+        username: "",
+        email: "",
+        password: "",
+        confirmPassword: "",
+        role: "administrador",
+        firstName: "",
+        lastName: "",
+        phone: "",
+      });
+      setErrors({});
+      onClose();
     } catch (error) {
-      console.error('Error al registrar usuario:', error)
+      console.error("Error al registrar usuario:", error);
     } finally {
-      setIsSubmitting(false)
+      setIsSubmitting(false);
     }
-  }
+  };
 
   const handleClose = () => {
     if (!isSubmitting) {
       setFormData({
-        username: '',
-        email: '',
-        password: '',
-        confirmPassword: '',
-        role: 'administrador',
-        firstName: '',
-        lastName: '',
-        phone: ''
-      })
-      setErrors({})
-      onClose()
+        username: "",
+        email: "",
+        password: "",
+        confirmPassword: "",
+        role: "administrador",
+        firstName: "",
+        lastName: "",
+        phone: "",
+      });
+      setErrors({});
+      onClose();
     }
-  }
+  };
 
-  if (!isOpen) return null
+  if (!isOpen) return null;
 
   return (
     <div className={styles.overlay} onClick={handleClose}>
@@ -146,8 +193,8 @@ export default function RegisterUserModal({ isOpen, onClose, onUserRegistered }:
             <Shield className={styles.titleIcon} />
             Registrar Nuevo Usuario
           </h2>
-          <button 
-            onClick={handleClose} 
+          <button
+            onClick={handleClose}
             className={styles.closeButton}
             disabled={isSubmitting}
           >
@@ -163,7 +210,7 @@ export default function RegisterUserModal({ isOpen, onClose, onUserRegistered }:
                 <User size={18} />
                 Información Personal
               </h3>
-              
+
               <div className={styles.row}>
                 <div className={styles.field}>
                   <label htmlFor="firstName" className={styles.label}>
@@ -175,10 +222,14 @@ export default function RegisterUserModal({ isOpen, onClose, onUserRegistered }:
                     name="firstName"
                     value={formData.firstName}
                     onChange={handleInputChange}
-                    className={`${styles.input} ${errors.firstName ? styles.inputError : ''}`}
+                    className={`${styles.input} ${
+                      errors.firstName ? styles.inputError : ""
+                    }`}
                     placeholder="Ingrese el nombre"
                   />
-                  {errors.firstName && <span className={styles.error}>{errors.firstName}</span>}
+                  {errors.firstName && (
+                    <span className={styles.error}>{errors.firstName}</span>
+                  )}
                 </div>
 
                 <div className={styles.field}>
@@ -191,10 +242,14 @@ export default function RegisterUserModal({ isOpen, onClose, onUserRegistered }:
                     name="lastName"
                     value={formData.lastName}
                     onChange={handleInputChange}
-                    className={`${styles.input} ${errors.lastName ? styles.inputError : ''}`}
+                    className={`${styles.input} ${
+                      errors.lastName ? styles.inputError : ""
+                    }`}
                     placeholder="Ingrese el apellido"
                   />
-                  {errors.lastName && <span className={styles.error}>{errors.lastName}</span>}
+                  {errors.lastName && (
+                    <span className={styles.error}>{errors.lastName}</span>
+                  )}
                 </div>
               </div>
 
@@ -209,10 +264,14 @@ export default function RegisterUserModal({ isOpen, onClose, onUserRegistered }:
                   name="email"
                   value={formData.email}
                   onChange={handleInputChange}
-                  className={`${styles.input} ${errors.email ? styles.inputError : ''}`}
+                  className={`${styles.input} ${
+                    errors.email ? styles.inputError : ""
+                  }`}
                   placeholder="usuario@goldenspartan.com"
                 />
-                {errors.email && <span className={styles.error}>{errors.email}</span>}
+                {errors.email && (
+                  <span className={styles.error}>{errors.email}</span>
+                )}
               </div>
 
               <div className={styles.field}>
@@ -249,10 +308,17 @@ export default function RegisterUserModal({ isOpen, onClose, onUserRegistered }:
                   value={formData.role}
                   onChange={handleInputChange}
                   className={styles.select}
+                  disabled={loadingRoles}
                 >
-                  <option value="administrador">Administrador</option>
-                  <option value="entrenador">Entrenador</option>
-            
+                  {loadingRoles ? (
+                    <option value="">Cargando roles...</option>
+                  ) : (
+                    roles.map((role) => (
+                      <option key={role.id} value={role.nombre}>
+                        {role.nombre}
+                      </option>
+                    ))
+                  )}
                 </select>
               </div>
 
@@ -266,10 +332,14 @@ export default function RegisterUserModal({ isOpen, onClose, onUserRegistered }:
                   name="username"
                   value={formData.username}
                   onChange={handleInputChange}
-                  className={`${styles.input} ${errors.username ? styles.inputError : ''}`}
+                  className={`${styles.input} ${
+                    errors.username ? styles.inputError : ""
+                  }`}
                   placeholder="Nombre de usuario único"
                 />
-                {errors.username && <span className={styles.error}>{errors.username}</span>}
+                {errors.username && (
+                  <span className={styles.error}>{errors.username}</span>
+                )}
               </div>
 
               <div className={styles.row}>
@@ -283,10 +353,14 @@ export default function RegisterUserModal({ isOpen, onClose, onUserRegistered }:
                     name="password"
                     value={formData.password}
                     onChange={handleInputChange}
-                    className={`${styles.input} ${errors.password ? styles.inputError : ''}`}
+                    className={`${styles.input} ${
+                      errors.password ? styles.inputError : ""
+                    }`}
                     placeholder="Mínimo 6 caracteres"
                   />
-                  {errors.password && <span className={styles.error}>{errors.password}</span>}
+                  {errors.password && (
+                    <span className={styles.error}>{errors.password}</span>
+                  )}
                 </div>
 
                 <div className={styles.field}>
@@ -299,10 +373,16 @@ export default function RegisterUserModal({ isOpen, onClose, onUserRegistered }:
                     name="confirmPassword"
                     value={formData.confirmPassword}
                     onChange={handleInputChange}
-                    className={`${styles.input} ${errors.confirmPassword ? styles.inputError : ''}`}
+                    className={`${styles.input} ${
+                      errors.confirmPassword ? styles.inputError : ""
+                    }`}
                     placeholder="Repetir contraseña"
                   />
-                  {errors.confirmPassword && <span className={styles.error}>{errors.confirmPassword}</span>}
+                  {errors.confirmPassword && (
+                    <span className={styles.error}>
+                      {errors.confirmPassword}
+                    </span>
+                  )}
                 </div>
               </div>
             </div>
@@ -323,11 +403,11 @@ export default function RegisterUserModal({ isOpen, onClose, onUserRegistered }:
               disabled={isSubmitting}
             >
               <Save size={16} />
-              {isSubmitting ? 'Registrando...' : 'Registrar Usuario'}
+              {isSubmitting ? "Registrando..." : "Registrar Usuario"}
             </button>
           </div>
         </form>
       </div>
     </div>
-  )
+  );
 }

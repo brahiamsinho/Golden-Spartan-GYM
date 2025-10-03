@@ -1,0 +1,282 @@
+/* Header Principal */
+.header {
+    background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+    border-bottom: 1px solid #334155;
+    padding: 0 2rem;
+    height: 70px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Sección Izquierda */
+.leftSection {
+    display: flex;
+    align-items: center;
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.logoIcon {
+    width: 45px;
+    height: 45px;
+    background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.logoText h1 {
+    color: white;
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin: 0;
+    line-height: 1.2;
+}
+
+.logoText p {
+    color: #94a3b8;
+    font-size: 0.75rem;
+    margin: 0;
+    font-weight: 500;
+}
+
+/* Sección Derecha */
+.rightSection {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+
+/* Sección de Usuario */
+.userSection {
+    position: relative;
+}
+
+.userButton {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 12px;
+    padding: 0.5rem 1rem;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    min-width: 200px;
+}
+
+.userButton:hover {
+    background: rgba(255, 255, 255, 0.15);
+    border-color: rgba(255, 255, 255, 0.3);
+    transform: translateY(-1px);
+}
+
+.userAvatar {
+    width: 40px;
+    height: 40px;
+    background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 700;
+    font-size: 0.9rem;
+    box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+}
+
+.userInfo {
+    flex: 1;
+    text-align: left;
+}
+
+.userName {
+    color: white;
+    font-weight: 600;
+    font-size: 0.9rem;
+    line-height: 1.2;
+}
+
+.userRole {
+    color: #94a3b8;
+    font-size: 0.75rem;
+    font-weight: 500;
+}
+
+.chevron {
+    color: #94a3b8;
+    transition: transform 0.2s ease;
+}
+
+.chevronUp {
+    transform: rotate(180deg);
+}
+
+/* Menú Desplegable del Usuario */
+.userMenu {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    margin-top: 0.5rem;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+    border: 1px solid #e2e8f0;
+    min-width: 250px;
+    z-index: 1000;
+    overflow: hidden;
+}
+
+.userMenuHeader {
+    padding: 1.5rem;
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.userMenuAvatar {
+    width: 50px;
+    height: 50px;
+    background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 700;
+    font-size: 1.1rem;
+    box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+}
+
+.userMenuInfo {
+    flex: 1;
+}
+
+.userMenuName {
+    color: #1e293b;
+    font-weight: 700;
+    font-size: 1rem;
+    margin-bottom: 0.25rem;
+}
+
+.userMenuEmail {
+    color: #64748b;
+    font-size: 0.8rem;
+    margin-bottom: 0.5rem;
+}
+
+.roleBadge {
+    display: inline-block;
+    padding: 0.25rem 0.75rem;
+    border-radius: 20px;
+    color: white;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.userMenuDivider {
+    height: 1px;
+    background: #e2e8f0;
+    margin: 0;
+}
+
+.logoutButton {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1.5rem;
+    background: none;
+    border: none;
+    color: #ef4444;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: left;
+}
+
+.logoutButton:hover {
+    background: #fef2f2;
+    color: #dc2626;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .header {
+        padding: 0 1rem;
+        height: 60px;
+    }
+
+    .logoText h1 {
+        font-size: 1.1rem;
+    }
+
+    .logoText p {
+        font-size: 0.7rem;
+    }
+
+    .userButton {
+        min-width: 150px;
+        padding: 0.4rem 0.8rem;
+    }
+
+    .userName {
+        font-size: 0.8rem;
+    }
+
+    .userRole {
+        font-size: 0.7rem;
+    }
+
+    .userMenu {
+        min-width: 220px;
+    }
+}
+
+@media (max-width: 480px) {
+    .header {
+        padding: 0 0.5rem;
+    }
+
+    .logo {
+        gap: 0.5rem;
+    }
+
+    .logoIcon {
+        width: 35px;
+        height: 35px;
+    }
+
+    .logoText h1 {
+        font-size: 1rem;
+    }
+
+    .userButton {
+        min-width: 120px;
+        gap: 0.5rem;
+    }
+
+    .userAvatar {
+        width: 35px;
+        height: 35px;
+        font-size: 0.8rem;
+    }
+
+}

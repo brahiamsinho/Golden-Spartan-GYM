@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Login - Golden Spartan GYM</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #0f172a;
+            color: white;
+        }
+
+        .container {
+            background: #1e293b;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 10px 0;
+        }
+
+        button {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 5px;
+        }
+
+        button:hover {
+            background: #2563eb;
+        }
+
+        .error {
+            background: #ef4444;
+            color: white;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+
+        .success {
+            background: #10b981;
+            color: white;
+            padding: 10px;
+            border-radius: 4px;
+            margin: 10px 0;
+        }
+
+        .log {
+            background: #374151;
+            padding: 10px;
+            border-radius: 4px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>🔧 Debug Login - Golden Spartan GYM</h1>
+
+    <div class="container">
+        <h2>1. Verificar Servicios</h2>
+        <button onclick="checkBackend()">Verificar Backend (8000)</button>
+        <button onclick="checkFrontend()">Verificar Frontend (5173)</button>
+        <div id="service-status"></div>
+    </div>
+
+    <div class="container">
+        <h2>2. Probar Login</h2>
+        <button onclick="testLogin()">Probar Login (admin/admin)</button>
+        <div id="login-status"></div>
+    </div>
+
+    <div class="container">
+        <h2>3. Logs de Debug</h2>
+        <button onclick="clearLogs()">Limpiar Logs</button>
+        <div id="logs" class="log"></div>
+    </div>
+
+    <script>
+        function log(message) {
+            const logsDiv = document.getElementById('logs');
+            const timestamp = new Date().toLocaleTimeString();
+            logsDiv.textContent += `[${timestamp}] ${message}\n`;
+            logsDiv.scrollTop = logsDiv.scrollHeight;
+        }
+
+        function clearLogs() {
+            document.getElementById('logs').textContent = '';
+        }
+
+        async function checkBackend() {
+            const statusDiv = document.getElementById('service-status');
+            log('Verificando backend en puerto 8000...');
+
+            try {
+                const response = await fetch('http://localhost:8000/api/token/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ username: 'admin', password: 'admin' })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    statusDiv.innerHTML = '<div class="success">✅ Backend funcionando correctamente</div>';
+                    log('Backend OK - Token obtenido: ' + data.access.substring(0, 20) + '...');
+                } else {
+                    statusDiv.innerHTML = '<div class="error">❌ Backend error: ' + response.status + '</div>';
+                    log('Backend ERROR - Status: ' + response.status);
+                }
+            } catch (error) {
+                statusDiv.innerHTML = '<div class="error">❌ Backend no disponible: ' + error.message + '</div>';
+                log('Backend ERROR - ' + error.message);
+            }
+        }
+
+        async function checkFrontend() {
+            const statusDiv = document.getElementById('service-status');
+            log('Verificando frontend en puerto 5173...');
+
+            try {
+                const response = await fetch('http://localhost:5173/');
+
+                if (response.ok) {
+                    statusDiv.innerHTML += '<div class="success">✅ Frontend funcionando correctamente</div>';
+                    log('Frontend OK - Status: ' + response.status);
+                } else {
+                    statusDiv.innerHTML += '<div class="error">❌ Frontend error: ' + response.status + '</div>';
+                    log('Frontend ERROR - Status: ' + response.status);
+                }
+            } catch (error) {
+                statusDiv.innerHTML += '<div class="error">❌ Frontend no disponible: ' + error.message + '</div>';
+                log('Frontend ERROR - ' + error.message);
+            }
+        }
+
+        async function testLogin() {
+            const statusDiv = document.getElementById('login-status');
+            log('Iniciando test de login...');
+
+            try {
+                // Paso 1: Obtener token
+                log('Paso 1: Obteniendo token...');
+                const tokenResponse = await fetch('http://localhost:8000/api/token/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ username: 'admin', password: 'admin' })
+                });
+
+                log('Token response status: ' + tokenResponse.status);
+
+                if (!tokenResponse.ok) {
+                    throw new Error('Error obteniendo token: ' + tokenResponse.status);
+                }
+
+                const tokenData = await tokenResponse.json();
+                log('Token obtenido exitosamente');
+
+                // Paso 2: Obtener info del usuario
+                log('Paso 2: Obteniendo info del usuario...');
+                const userResponse = await fetch('http://localhost:8000/api/user-info/', {
+                    headers: {
+                        'Authorization': `Bearer ${tokenData.access}`,
+                    },
+                });
+
+                log('User info response status: ' + userResponse.status);
+
+                if (!userResponse.ok) {
+                    throw new Error('Error obteniendo user info: ' + userResponse.status);
+                }
+
+                const userData = await userResponse.json();
+                log('User info obtenido: ' + JSON.stringify(userData, null, 2));
+
+                statusDiv.innerHTML = '<div class="success">✅ Login exitoso - Usuario: ' + userData.username + '</div>';
+
+            } catch (error) {
+                statusDiv.innerHTML = '<div class="error">❌ Error en login: ' + error.message + '</div>';
+                log('ERROR: ' + error.message);
+                log('Stack trace: ' + error.stack);
+            }
+        }
+
+        // Verificar servicios al cargar
+        window.onload = function () {
+            log('Página de debug cargada');
+            checkBackend();
+            checkFrontend();
+        };
+    </script>
+</body>
+
+</html>

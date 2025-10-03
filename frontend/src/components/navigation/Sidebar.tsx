@@ -18,6 +18,8 @@ interface SidebarProps {
   onLogout: () => void;
   isMobileOpen?: boolean;
   onMobileClose?: () => void;
+  isCollapsed?: boolean;
+  onToggle?: () => void;
 }
 
 export default function Sidebar({
@@ -26,8 +28,9 @@ export default function Sidebar({
   onLogout,
   isMobileOpen,
   onMobileClose,
+  isCollapsed = false,
+  onToggle,
 }: SidebarProps) {
-  const [isCollapsed, setIsCollapsed] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
   // Check if we're on mobile view
@@ -36,10 +39,7 @@ export default function Sidebar({
       const mobile = window.innerWidth <= 768;
       setIsMobile(mobile);
 
-      if (!mobile) {
-        // Reset collapsed state when returning to desktop
-        setIsCollapsed(false);
-      }
+      // No need to reset collapsed state as it's now controlled by parent
     };
 
     // Initial check
@@ -57,21 +57,21 @@ export default function Sidebar({
       id: "dashboard",
       label: "Dashboard",
       icon: Home,
-      permission: "dashboard.view",
+      permission: "Ver Dashboard",
     },
-    { id: "users", label: "Usuarios", icon: Users, permission: "users.view" },
-    { id: "roles", label: "Roles", icon: Shield, permission: "roles.view" },
+    { id: "users", label: "Usuarios", icon: Users, permission: "Ver Usuarios" },
+    { id: "roles", label: "Roles", icon: Shield, permission: "Ver Roles" },
     {
       id: "permissions",
       label: "Permisos",
       icon: Lock,
-      permission: "roles.view",
+      permission: "Ver Permisos",
     },
     {
       id: "activity-log",
       label: "Bitácora",
       icon: Activity,
-      permission: "dashboard.view",
+      permission: "Ver Bitácora",
     },
   ];
 
@@ -100,8 +100,8 @@ export default function Sidebar({
           onClick={() => {
             if (isMobile && onMobileClose) {
               onMobileClose();
-            } else {
-              setIsCollapsed(!isCollapsed);
+            } else if (onToggle) {
+              onToggle();
             }
           }}
           className={styles.toggleButton}

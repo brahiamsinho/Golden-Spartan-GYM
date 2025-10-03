@@ -1,199 +1,209 @@
-import { createContext, useContext, useState, useEffect } from 'react'
-import type { ReactNode } from 'react'
+import { createContext, useContext, useState, useEffect } from "react";
+import type { ReactNode } from "react";
 
 interface Permission {
-  id: string
-  name: string
-  description: string
-  module: string
+  id: string;
+  name: string;
+  description: string;
+  module: string;
 }
 
 interface Role {
-  id: string
-  name: string
-  description: string
-  permissions: string[]
+  id: string;
+  name: string;
+  description: string;
+  permissions: string[];
 }
 
 interface User {
-  id: string
-  username: string
-  email: string
-  role: Role
-  isActive: boolean
+  id: string;
+  username: string;
+  email: string;
+  role: Role;
+  isActive: boolean;
 }
 
 interface PermissionsContextType {
-  user: User | null
-  hasPermission: (permissionId: string) => boolean
-  hasAnyPermission: (permissionIds: string[]) => boolean
-  hasAllPermissions: (permissionIds: string[]) => boolean
-  userPermissions: string[]
+  user: User | null;
+  hasPermission: (permissionId: string) => boolean;
+  hasAnyPermission: (permissionIds: string[]) => boolean;
+  hasAllPermissions: (permissionIds: string[]) => boolean;
+  userPermissions: string[];
 }
 
-const PermissionsContext = createContext<PermissionsContextType | undefined>(undefined)
+const PermissionsContext = createContext<PermissionsContextType | undefined>(
+  undefined
+);
 
 interface PermissionsProviderProps {
-  children: ReactNode
-  user: any // Usuario del AuthContext
+  children: ReactNode;
+  user: any; // Usuario del AuthContext
 }
 
 // Roles predefinidos del sistema
 const SYSTEM_ROLES: Record<string, Role> = {
-  'super_admin': {
-    id: 'super_admin',
-    name: 'Super Administrador',
-    description: 'Acceso completo al sistema',
+  "Super Administrador": {
+    id: "super_admin",
+    name: "Super Administrador",
+    description: "Acceso completo al sistema",
     permissions: [
-      'system.admin',
-      'dashboard.view',
-      'users.view', 'users.create', 'users.edit', 'users.delete',
-      'roles.view', 'roles.create', 'roles.edit', 'roles.delete',
-      'clients.view', 'clients.create', 'clients.edit', 'clients.delete',
-      'reports.view', 'reports.export'
-    ]
+      "Ver Dashboard",
+      "Ver Usuarios",
+      "Crear Usuario",
+      "Editar Usuario",
+      "Eliminar Usuario",
+      "Ver Roles",
+      "Crear Rol",
+      "Editar Rol",
+      "Eliminar Rol",
+      "Ver Permisos",
+      "Asignar Permisos",
+      "Ver Bitácora",
+    ],
   },
-  'admin': {
-    id: 'admin',
-    name: 'Administrador',
-    description: 'Gestión de usuarios y clientes',
+  Administrador: {
+    id: "admin",
+    name: "Administrador",
+    description: "Gestión de usuarios y sistema",
     permissions: [
-      'dashboard.view',
-      'users.view', 'users.create', 'users.edit',
-      'roles.view',
-      'clients.view', 'clients.create', 'clients.edit',
-      'reports.view'
-    ]
+      "Ver Dashboard",
+      "Ver Usuarios",
+      "Crear Usuario",
+      "Editar Usuario",
+      "Ver Roles",
+      "Ver Bitácora",
+    ],
   },
-  'trainer': {
-    id: 'trainer',
-    name: 'Entrenador',
-    description: 'Gestión básica de clientes',
-    permissions: [
-      'dashboard.view',
-      'clients.view', 'clients.edit'
-    ]
+  Instructor: {
+    id: "instructor",
+    name: "Instructor",
+    description: "Gestión básica de usuarios",
+    permissions: ["Ver Dashboard", "Ver Usuarios"],
   },
-  
-}
+};
 
-export function PermissionsProvider({ children, user }: PermissionsProviderProps) {
-  const [currentUser, setCurrentUser] = useState<User | null>(null)
+export function PermissionsProvider({
+  children,
+  user,
+}: PermissionsProviderProps) {
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
 
   useEffect(() => {
     if (user) {
-      // Determinar el rol basado en el usuario
-      let roleKey = 'admin' // rol por defecto
-      
-      if (user.username === 'admin') {
-        roleKey = 'super_admin'
+      // Determinar el rol basado en los datos del usuario
+      let roleName = "Super Administrador"; // Por defecto
+
+      if (user.roles && user.roles.length > 0) {
+        roleName = user.roles[0].nombre;
       } else if (user.role) {
-        roleKey = user.role
+        roleName = user.role;
       }
 
-      const role = SYSTEM_ROLES[roleKey] || SYSTEM_ROLES.admin
+      const role =
+        SYSTEM_ROLES[roleName] || SYSTEM_ROLES["Super Administrador"];
 
       setCurrentUser({
-        id: user.id || '1',
+        id: String(user.id),
         username: user.username,
         email: user.email || `${user.username}@gym.com`,
         role: role,
-        isActive: true
-      })
+        isActive: true,
+      });
     } else {
-      setCurrentUser(null)
+      setCurrentUser(null);
     }
-  }, [user])
+  }, [user]);
 
   const hasPermission = (permissionId: string): boolean => {
-    if (!currentUser) return false
-    return currentUser.role.permissions.includes(permissionId)
-  }
+    if (!currentUser) return false;
+    return currentUser.role.permissions.includes(permissionId);
+  };
 
   const hasAnyPermission = (permissionIds: string[]): boolean => {
-    if (!currentUser) return false
-    return permissionIds.some(permissionId => 
+    if (!currentUser) return false;
+    return permissionIds.some((permissionId) =>
       currentUser.role.permissions.includes(permissionId)
-    )
-  }
+    );
+  };
 
   const hasAllPermissions = (permissionIds: string[]): boolean => {
-    if (!currentUser) return false
-    return permissionIds.every(permissionId => 
+    if (!currentUser) return false;
+    return permissionIds.every((permissionId) =>
       currentUser.role.permissions.includes(permissionId)
-    )
-  }
+    );
+  };
 
-  const userPermissions = currentUser ? currentUser.role.permissions : []
+  const userPermissions = currentUser ? currentUser.role.permissions : [];
 
   const value: PermissionsContextType = {
     user: currentUser,
     hasPermission,
     hasAnyPermission,
     hasAllPermissions,
-    userPermissions
-  }
+    userPermissions,
+  };
 
   return (
     <PermissionsContext.Provider value={value}>
       {children}
     </PermissionsContext.Provider>
-  )
+  );
 }
 
 export function usePermissions() {
-  const context = useContext(PermissionsContext)
+  const context = useContext(PermissionsContext);
   if (context === undefined) {
-    throw new Error('usePermissions must be used within a PermissionsProvider')
+    throw new Error("usePermissions must be used within a PermissionsProvider");
   }
-  return context
+  return context;
 }
 
 // Componente para mostrar contenido condicionalmente basado en permisos
 interface ProtectedComponentProps {
-  children: ReactNode
-  permission?: string
-  permissions?: string[]
-  requireAll?: boolean
-  fallback?: ReactNode
+  children: ReactNode;
+  permission?: string;
+  permissions?: string[];
+  requireAll?: boolean;
+  fallback?: ReactNode;
 }
 
-export function ProtectedComponent({ 
-  children, 
-  permission, 
-  permissions = [], 
-  requireAll = false, 
-  fallback = null 
+export function ProtectedComponent({
+  children,
+  permission,
+  permissions = [],
+  requireAll = false,
+  fallback = null,
 }: ProtectedComponentProps) {
-  const { hasPermission, hasAnyPermission, hasAllPermissions } = usePermissions()
+  const { hasPermission, hasAnyPermission, hasAllPermissions } =
+    usePermissions();
 
-  let hasAccess = false
+  let hasAccess = false;
 
   if (permission) {
-    hasAccess = hasPermission(permission)
+    hasAccess = hasPermission(permission);
   } else if (permissions.length > 0) {
-    hasAccess = requireAll 
+    hasAccess = requireAll
       ? hasAllPermissions(permissions)
-      : hasAnyPermission(permissions)
+      : hasAnyPermission(permissions);
   } else {
-    hasAccess = true // Si no se especifican permisos, mostrar por defecto
+    hasAccess = true; // Si no se especifican permisos, mostrar por defecto
   }
 
-  return hasAccess ? <>{children}</> : <>{fallback}</>
+  return hasAccess ? <>{children}</> : <>{fallback}</>;
 }
 
 // Hook para verificar permisos de manera más simple
 export function useHasPermission(permissionId: string): boolean {
-  const { hasPermission } = usePermissions()
-  return hasPermission(permissionId)
+  const { hasPermission } = usePermissions();
+  return hasPermission(permissionId);
 }
 
 export function useHasAnyPermission(permissionIds: string[]): boolean {
-  const { hasAnyPermission } = usePermissions()
-  return hasAnyPermission(permissionIds)
+  const { hasAnyPermission } = usePermissions();
+  return hasAnyPermission(permissionIds);
 }
 
 export function useHasAllPermissions(permissionIds: string[]): boolean {
-  const { hasAllPermissions } = usePermissions()
-  return hasAllPermissions(permissionIds)
+  const { hasAllPermissions } = usePermissions();
+  return hasAllPermissions(permissionIds);
 }

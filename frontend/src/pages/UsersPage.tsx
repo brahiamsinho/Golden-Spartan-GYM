@@ -1,138 +1,188 @@
-import { useState } from "react"
-import { Search, Plus, Filter, MoreVertical, Edit, Trash2, Shield, User, Clock } from "lucide-react"
-import RegisterUserModal from "../components/modals/RegisterUserModal"
-import styles from "./UsersPage.module.css"
+import { useState, useEffect } from "react";
+import {
+  Search,
+  Plus,
+  Filter,
+  MoreVertical,
+  Edit,
+  Trash2,
+  Shield,
+  User,
+  Clock,
+} from "lucide-react";
+import RegisterUserModal from "../components/modals/RegisterUserModal";
+import apiService from "../services/api";
+import styles from "./UsersPage.module.css";
 
 interface Usuario {
-  id: number
-  nombre: string
-  email: string
-  rol: string
-  permisos: string[]
-  ultimoAcceso: string
-  estado: "activo" | "inactivo" | "bloqueado"
-  fechaCreacion: string
-  sesionesActivas: number
+  id: number;
+  username: string;
+  email: string;
+  first_name: string;
+  last_name: string;
+  is_active: boolean;
+  date_joined: string;
+  last_login: string | null;
+  roles?: { id: number; nombre: string }[];
+  permisos?: string[];
 }
 
 interface UserFormData {
-  username: string
-  email: string
-  password: string
-  confirmPassword: string
-  role: 'administrador' | 'entrenador' 
-  firstName: string
-  lastName: string
-  phone: string
+  username: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
+  role: "administrador" | "entrenador";
+  firstName: string;
+  lastName: string;
+  phone: string;
 }
 
 export default function UsersPage() {
-  const [searchTerm, setSearchTerm] = useState("")
-  const [filterRole, setFilterRole] = useState<string>("all")
-  const [showRegisterModal, setShowRegisterModal] = useState(false)
-  const [usuarios, setUsuarios] = useState<Usuario[]>([
-    {
-      id: 1,
-      nombre: "Admin Principal",
-      email: "admin@goldenspartan.com",
-      rol: "Super Administrador",
-      permisos: ["Gestión Completa", "Configuración", "Usuarios", "Reportes"],
-      ultimoAcceso: "2024-10-02 09:15:23",
-      estado: "activo",
-      fechaCreacion: "2023-01-01",
-      sesionesActivas: 1
-    },
-    {
-      id: 2,
-      nombre: "María García",
-      email: "maria.garcia@goldenspartan.com",
-      rol: "Administrador",
-      permisos: ["Gestión Clientes", "Membresías", "Clases"],
-      ultimoAcceso: "2024-10-02 08:30:15",
-      estado: "activo",
-      fechaCreacion: "2024-01-15",
-      sesionesActivas: 1
-    },
-   
-    {
-      id: 4,
-      nombre: "Ana Martín",
-      email: "ana.martin@goldenspartan.com",
-      rol: "Gerente",
-      permisos: ["Reportes", "Inventario", "Personal"],
-      ultimoAcceso: "2024-10-02 07:20:30",
-      estado: "activo",
-      fechaCreacion: "2023-11-10",
-      sesionesActivas: 0
-    },
-    {
-      id: 5,
-      nombre: "Pedro Silva",
-      email: "pedro.silva@goldenspartan.com",
-      rol: "Instructor",
-      permisos: ["Gestión Clases", "Rutinas"],
-      ultimoAcceso: "2024-09-28 16:30:00",
-      estado: "inactivo",
-      fechaCreacion: "2024-03-05",
-      sesionesActivas: 0
-    }
-  ])
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterRole, setFilterRole] = useState<string>("all");
+  const [showRegisterModal, setShowRegisterModal] = useState(false);
+  const [usuarios, setUsuarios] = useState<Usuario[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleUserRegistered = (newUser: UserFormData) => {
-    const newUsuario: Usuario = {
-      id: usuarios.length + 1,
-      nombre: `${newUser.firstName} ${newUser.lastName}`,
-      email: newUser.email,
-      rol: newUser.role === 'administrador' ? 'Administrador' : 
-           newUser.role === 'entrenador' ? 'Entrenador' : 'Instructor',//corregir
-      permisos: newUser.role === 'administrador' ? ['Gestión Completa'] : 
-                newUser.role === 'entrenador' ? ['Gestión Clientes', 'Clases'] : 
-                ['Gestión Clientes'],
-      ultimoAcceso: 'Nunca',
-      estado: "activo",
-      fechaCreacion: new Date().toISOString().split('T')[0],
-      sesionesActivas: 0
+  // Cargar usuarios del backend
+  useEffect(() => {
+    loadUsers();
+  }, []);
+
+  const loadUsers = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const users = await apiService.getUsers();
+      setUsuarios(users);
+    } catch (err) {
+      console.error("Error cargando usuarios:", err);
+      setError(
+        "Error al cargar usuarios. Verifica que el backend esté ejecutándose."
+      );
+      setUsuarios([]);
+    } finally {
+      setLoading(false);
     }
-    setUsuarios(prev => [...prev, newUsuario])
-  }
+  };
+
+  const handleUserRegistered = async (newUser: UserFormData) => {
+    try {
+      console.log("Datos del usuario a crear:", newUser);
+
+      // Obtener roles disponibles
+      const roles = await apiService.getRoles();
+      console.log("Roles disponibles:", roles);
+
+      const selectedRole = roles.find((r: any) => r.nombre === newUser.role);
+
+      console.log("Rol seleccionado:", selectedRole);
+
+      if (!selectedRole) {
+        throw new Error(`Rol '${newUser.role}' no encontrado`);
+      }
+
+      // Crear usuario en el backend
+      const userData = {
+        username: newUser.username,
+        email: newUser.email,
+        password: newUser.password,
+        first_name: newUser.firstName,
+        last_name: newUser.lastName,
+        rol: selectedRole.id, // ID del rol
+      };
+
+      console.log("Datos a enviar al backend:", userData);
+
+      const createdUser = await apiService.createUser(userData);
+
+      // Recargar la lista de usuarios
+      await loadUsers();
+
+      console.log("Usuario creado exitosamente:", createdUser);
+    } catch (error) {
+      console.error("Error creando usuario:", error);
+      setError(
+        `Error al crear usuario: ${
+          error instanceof Error ? error.message : "Error desconocido"
+        }`
+      );
+    }
+  };
 
   const getRoleColor = (role: string) => {
     switch (role) {
-      case "Super Administrador": return "#ef4444"
-      case "Administrador": return "#3b82f6"
-      case "Instructor": return "#f59e0b"
-      default: return "#6b7280"
+      case "Super Administrador":
+        return "#ef4444";
+      case "Administrador":
+        return "#3b82f6";
+      case "Instructor":
+        return "#f59e0b";
+      default:
+        return "#6b7280";
     }
-  }
+  };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "activo": return "#10b981"
-      case "inactivo": return "#6b7280"
-      case "bloqueado": return "#ef4444"
-      default: return "#6b7280"
-    }
-  }
+  const getStatusColor = (isActive: boolean) => {
+    return isActive ? "#10b981" : "#6b7280";
+  };
 
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case "activo": return "Activo"
-      case "inactivo": return "Inactivo"
-      case "bloqueado": return "Bloqueado"
-      default: return status
-    }
-  }
+  const getStatusText = (isActive: boolean) => {
+    return isActive ? "Activo" : "Inactivo";
+  };
 
-  const filteredUsuarios = usuarios.filter(usuario => {
-    const matchesSearch = 
-      usuario.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  const getDisplayName = (usuario: Usuario) => {
+    return (
+      `${usuario.first_name} ${usuario.last_name}`.trim() || usuario.username
+    );
+  };
+
+  const getPrimaryRole = (usuario: Usuario) => {
+    return usuario.roles && usuario.roles.length > 0
+      ? usuario.roles[0].nombre
+      : "Sin rol";
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString();
+  };
+
+  const formatDateTime = (dateString: string | null) => {
+    if (!dateString) return "Nunca";
+    return new Date(dateString).toLocaleString();
+  };
+
+  const filteredUsuarios = usuarios.filter((usuario) => {
+    const displayName = getDisplayName(usuario);
+    const primaryRole = getPrimaryRole(usuario);
+
+    const matchesSearch =
+      displayName.toLowerCase().includes(searchTerm.toLowerCase()) ||
       usuario.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      usuario.rol.toLowerCase().includes(searchTerm.toLowerCase())
-    
-    const matchesFilter = filterRole === "all" || usuario.rol === filterRole
-    
-    return matchesSearch && matchesFilter
-  })
+      primaryRole.toLowerCase().includes(searchTerm.toLowerCase());
+
+    const matchesFilter = filterRole === "all" || primaryRole === filterRole;
+
+    return matchesSearch && matchesFilter;
+  });
+
+  if (loading) {
+    return (
+      <div className={styles.users}>
+        <div className={styles.header}>
+          <div>
+            <h1>Usuarios Administrativos</h1>
+            <p>Cargando usuarios...</p>
+          </div>
+        </div>
+        <div style={{ textAlign: "center", padding: "2rem" }}>
+          <div>Cargando...</div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className={styles.users}>
@@ -140,8 +190,11 @@ export default function UsersPage() {
         <div>
           <h1>Usuarios Administrativos</h1>
           <p>Gestiona los usuarios del sistema y sus permisos</p>
+          {error && (
+            <p style={{ color: "#ef4444", fontSize: "0.9rem" }}>{error}</p>
+          )}
         </div>
-        <button 
+        <button
           className={styles.addButton}
           onClick={() => setShowRegisterModal(true)}
         >
@@ -160,9 +213,9 @@ export default function UsersPage() {
             onChange={(e) => setSearchTerm(e.target.value)}
           />
         </div>
-        
-        <select 
-          value={filterRole} 
+
+        <select
+          value={filterRole}
           onChange={(e) => setFilterRole(e.target.value)}
           className={styles.filterSelect}
         >
@@ -193,88 +246,112 @@ export default function UsersPage() {
             </tr>
           </thead>
           <tbody>
-            {filteredUsuarios.map((usuario) => (
-              <tr key={usuario.id}>
-                <td>
-                  <div className={styles.userInfo}>
-                    <div className={styles.avatar}>
-                      <User size={20} />
+            {filteredUsuarios.map((usuario) => {
+              const displayName = getDisplayName(usuario);
+              const primaryRole = getPrimaryRole(usuario);
+              const lastLogin = formatDateTime(usuario.last_login);
+              const dateJoined = formatDate(usuario.date_joined);
+
+              return (
+                <tr key={usuario.id}>
+                  <td>
+                    <div className={styles.userInfo}>
+                      <div className={styles.avatar}>
+                        <User size={20} />
+                      </div>
+                      <div>
+                        <div className={styles.userName}>{displayName}</div>
+                        <div className={styles.userEmail}>{usuario.email}</div>
+                      </div>
                     </div>
-                    <div>
-                      <div className={styles.userName}>{usuario.nombre}</div>
-                      <div className={styles.userEmail}>{usuario.email}</div>
+                  </td>
+                  <td>
+                    <div className={styles.roleInfo}>
+                      <span
+                        className={styles.role}
+                        style={{ backgroundColor: getRoleColor(primaryRole) }}
+                      >
+                        <Shield size={14} />
+                        {primaryRole}
+                      </span>
+                      <div className={styles.permissions}>
+                        {usuario.permisos &&
+                          usuario.permisos.slice(0, 2).map((permiso, index) => (
+                            <span key={index} className={styles.permission}>
+                              {permiso}
+                            </span>
+                          ))}
+                        {usuario.permisos && usuario.permisos.length > 2 && (
+                          <span className={styles.morePermissions}>
+                            +{usuario.permisos.length - 2} más
+                          </span>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                </td>
-                <td>
-                  <div className={styles.roleInfo}>
-                    <span 
-                      className={styles.role}
-                      style={{ backgroundColor: getRoleColor(usuario.rol) }}
+                  </td>
+                  <td>
+                    <span
+                      className={styles.status}
+                      style={{
+                        backgroundColor: getStatusColor(usuario.is_active),
+                      }}
                     >
-                      <Shield size={14} />
-                      {usuario.rol}
+                      {getStatusText(usuario.is_active)}
                     </span>
-                    <div className={styles.permissions}>
-                      {usuario.permisos.slice(0, 2).map((permiso, index) => (
-                        <span key={index} className={styles.permission}>
-                          {permiso}
-                        </span>
-                      ))}
-                      {usuario.permisos.length > 2 && (
-                        <span className={styles.morePermissions}>
-                          +{usuario.permisos.length - 2} más
-                        </span>
-                      )}
+                  </td>
+                  <td>
+                    <div className={styles.lastAccess}>
+                      <Clock size={14} />
+                      <div>
+                        <div>{lastLogin}</div>
+                      </div>
                     </div>
-                  </div>
-                </td>
-                <td>
-                  <span 
-                    className={styles.status}
-                    style={{ backgroundColor: getStatusColor(usuario.estado) }}
-                  >
-                    {getStatusText(usuario.estado)}
-                  </span>
-                </td>
-                <td>
-                  <div className={styles.lastAccess}>
-                    <Clock size={14} />
-                    <div>
-                      <div>{usuario.ultimoAcceso.split(' ')[0]}</div>
-                      <div className={styles.time}>{usuario.ultimoAcceso.split(' ')[1]}</div>
+                  </td>
+                  <td>
+                    <div className={styles.sessions}>
+                      <span
+                        className={`${styles.sessionBadge} ${
+                          usuario.is_active ? styles.active : styles.inactive
+                        }`}
+                      >
+                        {usuario.is_active ? "1 activa" : "0 activas"}
+                      </span>
                     </div>
-                  </div>
-                </td>
-                <td>
-                  <div className={styles.sessions}>
-                    <span className={`${styles.sessionBadge} ${usuario.sesionesActivas > 0 ? styles.active : styles.inactive}`}>
-                      {usuario.sesionesActivas} activa{usuario.sesionesActivas !== 1 ? 's' : ''}
-                    </span>
-                  </div>
-                </td>
-                <td>{new Date(usuario.fechaCreacion).toLocaleDateString()}</td>
-                <td>
-                  <div className={styles.actions}>
-                    <button className={styles.actionButton} title="Editar usuario">
-                      <Edit size={16} />
-                    </button>
-                    <button className={styles.actionButton} title="Eliminar usuario">
-                      <Trash2 size={16} />
-                    </button>
-                    <button className={styles.actionButton} title="Más opciones">
-                      <MoreVertical size={16} />
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
+                  </td>
+                  <td>{dateJoined}</td>
+                  <td>
+                    <div className={styles.actions}>
+                      <button
+                        className={styles.actionButton}
+                        title="Editar usuario"
+                      >
+                        <Edit size={16} />
+                      </button>
+                      <button
+                        className={styles.actionButton}
+                        title="Eliminar usuario"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                      <button
+                        className={styles.actionButton}
+                        title="Más opciones"
+                      >
+                        <MoreVertical size={16} />
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
 
       <div className={styles.pagination}>
-        <span>Mostrando {filteredUsuarios.length} de {usuarios.length} usuarios</span>
+        <span>
+          Mostrando {filteredUsuarios.length} de {usuarios.length} usuarios
+        </span>
         <div className={styles.paginationButtons}>
           <button>Anterior</button>
           <button className={styles.active}>1</button>
@@ -290,5 +367,5 @@ export default function UsersPage() {
         onUserRegistered={handleUserRegistered}
       />
     </div>
-  )
+  );
 }

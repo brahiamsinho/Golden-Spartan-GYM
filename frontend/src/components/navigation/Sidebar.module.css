@@ -12,6 +12,7 @@
   z-index: 1000;
   overflow-x: hidden;
   box-shadow: 2px 0 10px rgba(0, 0, 0, 0.2);
+  transform: translateX(0);
 }
 
 .sidebar.collapsed {
