@@ -1,4 +1,6 @@
+import { useState, useEffect } from "react";
 import { Activity, Clock, User, Shield, Eye } from "lucide-react";
+import apiService from "../services/api";
 import styles from "./DashboardPage.module.css";
 
 interface UserActivity {
@@ -11,146 +13,160 @@ interface UserActivity {
   details?: string;
 }
 
+interface DashboardStats {
+  usuarios_activos_hoy: number;
+  diferencia_usuarios: number;
+  intentos_fallidos: number;
+  total_usuarios: number;
+  total_roles: number;
+  actividad_reciente: number;
+  sistema_operativo: boolean;
+}
+
+interface BitacoraEntry {
+  id: number;
+  usuario_nombre: string;
+  tipo_accion_display: string;
+  accion: string;
+  descripcion: string;
+  nivel_display: string;
+  fecha_formateada: string;
+  ip_address: string;
+  datos_adicionales: any;
+}
+
 export default function DashboardPage() {
-  const recentActivities: UserActivity[] = [
-    {
-      id: 1,
-      username: "admin",
-      action: "Inicio de sesión",
-      timestamp: "2024-10-02 09:15:23",
-      ip: "192.168.1.100",
-      status: "success",
-      details: "Acceso al dashboard principal",
-    },
-    {
-      id: 2,
-      username: "maria_garcia",
-      action: "Registro de nuevo miembro",
-      timestamp: "2024-10-02 09:10:45",
-      ip: "192.168.1.105",
-      status: "success",
-      details: "Registró a Juan Pérez como nuevo miembro",
-    },
-    {
-      id: 3,
-      username: "carlos_lopez",
-      action: "Intento de acceso fallido",
-      timestamp: "2024-10-02 08:55:12",
-      ip: "192.168.1.110",
-      status: "error",
-      details: "Contraseña incorrecta (3 intentos)",
-    },
-    {
-      id: 4,
-      username: "admin",
-      action: "Modificó horario de clase",
-      timestamp: "2024-10-02 08:45:30",
-      ip: "192.168.1.100",
-      status: "success",
-      details: "Cambió horario de Yoga de 9:00 a 9:30",
-    },
-    {
-      id: 5,
-      username: "ana_martin",
-      action: "Consulta de reportes",
-      timestamp: "2024-10-02 08:30:15",
-      ip: "192.168.1.115",
-      status: "success",
-      details: "Generó reporte mensual de asistencia",
-    },
-    {
-      id: 6,
-      username: "luis_torres",
-      action: "Sesión expirada",
-      timestamp: "2024-10-02 08:20:00",
-      ip: "192.168.1.120",
-      status: "warning",
-      details: "Sesión cerrada por inactividad",
-    },
-    {
-      id: 7,
-      username: "pedro_silva",
-      action: "Cambio de contraseña",
-      timestamp: "2024-10-02 08:15:45",
-      ip: "192.168.1.125",
-      status: "success",
-      details: "Contraseña actualizada exitosamente",
-    },
-    {
-      id: 8,
-      username: "system",
-      action: "Backup automático",
-      timestamp: "2024-10-02 03:00:00",
-      ip: "localhost",
-      status: "success",
-      details: "Respaldo de base de datos completado",
-    },
-  ];
+  const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [recentActivities, setRecentActivities] = useState<BitacoraEntry[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  const systemStats = [
-    {
-      label: "Usuarios Activos Hoy",
-      value: "12",
-      icon: User,
-      trend: "+3 desde ayer",
-      color: "#3b82f6",
-    },
-    {
-      label: "Sesiones Activas",
-      value: "8",
-      icon: Activity,
-      trend: "En línea ahora",
-      color: "#10b981",
-    },
-    {
-      label: "Intentos Fallidos",
-      value: "3",
-      icon: Shield,
-      trend: "Últimas 24h",
-      color: "#ef4444",
-    },
-    {
-      label: "Tiempo Promedio",
-      value: "45min",
-      icon: Clock,
-      trend: "Por sesión",
-      color: "#8b5cf6",
-    },
-  ];
+  useEffect(() => {
+    loadDashboardData();
+  }, []);
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "success":
+  const loadDashboardData = async () => {
+    try {
+      setLoading(true);
+      const [statsData, activitiesData] = await Promise.all([
+        apiService.getDashboardStats(),
+        apiService.getRecentActivity(8),
+      ]);
+
+      setStats(statsData);
+      setRecentActivities(activitiesData.results || activitiesData);
+    } catch (err) {
+      setError("Error al cargar los datos del dashboard");
+      console.error("Error loading dashboard data:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className={styles.dashboard}>
+        <div className={styles.loading}>
+          <div className={styles.spinner}></div>
+          <p>Cargando dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className={styles.dashboard}>
+        <div className={styles.error}>
+          <p>{error}</p>
+          <button onClick={loadDashboardData} className={styles.retryButton}>
+            Reintentar
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  const systemStats = stats
+    ? [
+        {
+          label: "Usuarios Activos Hoy",
+          value: stats.usuarios_activos_hoy.toString(),
+          icon: User,
+          trend:
+            stats.diferencia_usuarios >= 0
+              ? `+${stats.diferencia_usuarios} desde ayer`
+              : `${stats.diferencia_usuarios} desde ayer`,
+          color: "#3b82f6",
+        },
+        {
+          label: "Actividad Reciente",
+          value: stats.actividad_reciente.toString(),
+          icon: Activity,
+          trend: "Últimas 24h",
+          color: "#10b981",
+        },
+        {
+          label: "Intentos Fallidos",
+          value: stats.intentos_fallidos.toString(),
+          icon: Shield,
+          trend: "Últimas 24h",
+          color: "#ef4444",
+        },
+        {
+          label: "Total Usuarios",
+          value: stats.total_usuarios.toString(),
+          icon: Clock,
+          trend: "En el sistema",
+          color: "#8b5cf6",
+        },
+      ]
+    : [];
+
+  const getStatusColor = (nivel: string) => {
+    switch (nivel.toLowerCase()) {
+      case "info":
         return "#10b981";
       case "warning":
         return "#f59e0b";
       case "error":
         return "#ef4444";
+      case "critical":
+        return "#dc2626";
       default:
         return "#6b7280";
     }
   };
 
-  const getStatusText = (status: string) => {
-    switch (status) {
-      case "success":
+  const getStatusText = (nivel: string) => {
+    switch (nivel.toLowerCase()) {
+      case "info":
         return "Exitoso";
       case "warning":
         return "Advertencia";
       case "error":
         return "Error";
+      case "critical":
+        return "Crítico";
       default:
-        return status;
+        return nivel;
     }
   };
 
-  const getActionIcon = (action: string) => {
-    if (action.includes("sesión") || action.includes("acceso")) return User;
-    if (action.includes("registro") || action.includes("Registró")) return User;
-    if (action.includes("horario") || action.includes("Modificó")) return Clock;
-    if (action.includes("reporte") || action.includes("Consulta")) return Eye;
-    if (action.includes("contraseña")) return Shield;
-    return Activity;
+  const getActionIcon = (tipoAccion: string) => {
+    switch (tipoAccion.toLowerCase()) {
+      case "login":
+      case "logout":
+        return User;
+      case "create_user":
+      case "update_user":
+        return User;
+      case "create_role":
+      case "update_role":
+        return Shield;
+      default:
+        return Activity;
+    }
   };
 
   return (
@@ -190,77 +206,80 @@ export default function DashboardPage() {
               <div className={styles.statusIndicator}>
                 <div
                   className={styles.statusDot}
-                  style={{ backgroundColor: "#10b981" }}
+                  style={{
+                    backgroundColor: stats?.sistema_operativo
+                      ? "#10b981"
+                      : "#ef4444",
+                  }}
                 ></div>
-                <span>Sistema funcionando normalmente</span>
+                <span>
+                  {stats?.sistema_operativo
+                    ? "Sistema funcionando normalmente"
+                    : "Sistema con problemas"}
+                </span>
               </div>
               <p className={styles.statusDescription}>
-                Todos los servicios están operativos y funcionando
-                correctamente.
+                {stats?.sistema_operativo
+                  ? "Todos los servicios están operativos y funcionando correctamente."
+                  : "Se han detectado problemas en el sistema. Revisar logs."}
               </p>
             </div>
 
             <div className={styles.summaryCard}>
               <h3>Última Actividad</h3>
               <div className={styles.lastActivity}>
-                <p>
-                  <strong>Usuario:</strong> admin
-                </p>
-                <p>
-                  <strong>Acción:</strong> Inicio de sesión
-                </p>
-                <p>
-                  <strong>Hora:</strong> 09:15:23
-                </p>
+                {recentActivities.length > 0 ? (
+                  <>
+                    <p>
+                      <strong>Usuario:</strong>{" "}
+                      {recentActivities[0].usuario_nombre || "Sistema"}
+                    </p>
+                    <p>
+                      <strong>Acción:</strong> {recentActivities[0].accion}
+                    </p>
+                    <p>
+                      <strong>Hora:</strong>{" "}
+                      {recentActivities[0].fecha_formateada}
+                    </p>
+                  </>
+                ) : (
+                  <p>No hay actividad reciente</p>
+                )}
               </div>
             </div>
 
             <div className={styles.summaryCard}>
               <h3>Alertas Pendientes</h3>
               <div className={styles.alertsSummary}>
-                <div className={styles.alertItem}>
-                  <div
-                    className={styles.alertDot}
-                    style={{ backgroundColor: "#ef4444" }}
-                  ></div>
-                  <span>3 intentos fallidos</span>
-                </div>
-                <div className={styles.alertItem}>
-                  <div
-                    className={styles.alertDot}
-                    style={{ backgroundColor: "#f59e0b" }}
-                  ></div>
-                  <span>2 sesiones expiradas</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className={styles.section}>
-          <h2>Accesos Rápidos</h2>
-          <div className={styles.quickActions}>
-            <div className={styles.actionCard}>
-              <h3>Gestión de Usuarios</h3>
-              <p>Administra usuarios del sistema</p>
-              <div className={styles.actionStats}>
-                <span>12 usuarios activos</span>
-              </div>
-            </div>
-
-            <div className={styles.actionCard}>
-              <h3>Roles y Permisos</h3>
-              <p>Configura roles y permisos</p>
-              <div className={styles.actionStats}>
-                <span>4 roles configurados</span>
-              </div>
-            </div>
-
-            <div className={styles.actionCard}>
-              <h3>Bitácora de Actividad</h3>
-              <p>Revisa el registro de actividades</p>
-              <div className={styles.actionStats}>
-                <span>Ver registro completo</span>
+                {stats && stats.intentos_fallidos > 0 && (
+                  <div className={styles.alertItem}>
+                    <div
+                      className={styles.alertDot}
+                      style={{ backgroundColor: "#ef4444" }}
+                    ></div>
+                    <span>{stats.intentos_fallidos} intentos fallidos</span>
+                  </div>
+                )}
+                {stats && stats.actividad_reciente === 0 && (
+                  <div className={styles.alertItem}>
+                    <div
+                      className={styles.alertDot}
+                      style={{ backgroundColor: "#f59e0b" }}
+                    ></div>
+                    <span>Sin actividad reciente</span>
+                  </div>
+                )}
+                {stats &&
+                  stats.intentos_fallidos === 0 &&
+                  stats.actividad_reciente > 0 && (
+                    <div className={styles.alertItem}>
+                      <div
+                        className={styles.alertDot}
+                        style={{ backgroundColor: "#10b981" }}
+                      ></div>
+                      <span>Sistema funcionando correctamente</span>
+                    </div>
+                  )}
               </div>
             </div>
           </div>

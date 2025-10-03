@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import {
   Users,
   LogOut,
@@ -9,12 +10,11 @@ import {
   Lock,
   Activity,
 } from "lucide-react";
-import { ProtectedComponent } from "../../contexts/PermissionsContext";
+import { usePermissions } from "../../contexts/PermissionsContext";
+import { ROUTES, ROUTE_PERMISSIONS } from "../../config/routes";
 import styles from "./Sidebar.module.css";
 
 interface SidebarProps {
-  currentPage: string;
-  onPageChange: (page: string) => void;
   onLogout: () => void;
   isMobileOpen?: boolean;
   onMobileClose?: () => void;
@@ -23,14 +23,15 @@ interface SidebarProps {
 }
 
 export default function Sidebar({
-  currentPage,
-  onPageChange,
   onLogout,
   isMobileOpen,
   onMobileClose,
   isCollapsed = false,
   onToggle,
 }: SidebarProps) {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const { hasPermission } = usePermissions();
   const [isMobile, setIsMobile] = useState(false);
 
   // Check if we're on mobile view
@@ -52,31 +53,51 @@ export default function Sidebar({
     return () => window.removeEventListener("resize", checkIfMobile);
   }, []);
 
-  const menuItems = [
+  const allMenuItems = [
     {
       id: "dashboard",
       label: "Dashboard",
       icon: Home,
-      permission: "Ver Dashboard",
+      path: ROUTES.DASHBOARD,
+      permission: ROUTE_PERMISSIONS[ROUTES.DASHBOARD],
     },
-    { id: "users", label: "Usuarios", icon: Users, permission: "Ver Usuarios" },
-    { id: "roles", label: "Roles", icon: Shield, permission: "Ver Roles" },
+    {
+      id: "users",
+      label: "Usuarios",
+      icon: Users,
+      path: ROUTES.USERS,
+      permission: ROUTE_PERMISSIONS[ROUTES.USERS],
+    },
+    {
+      id: "roles",
+      label: "Roles",
+      icon: Shield,
+      path: ROUTES.ROLES,
+      permission: ROUTE_PERMISSIONS[ROUTES.ROLES],
+    },
     {
       id: "permissions",
       label: "Permisos",
       icon: Lock,
-      permission: "Ver Permisos",
+      path: ROUTES.PERMISSIONS,
+      permission: ROUTE_PERMISSIONS[ROUTES.PERMISSIONS],
     },
     {
       id: "activity-log",
       label: "Bitácora",
       icon: Activity,
-      permission: "Ver Bitácora",
+      path: ROUTES.ACTIVITY_LOG,
+      permission: ROUTE_PERMISSIONS[ROUTES.ACTIVITY_LOG],
     },
   ];
 
-  const handleNavItemClick = (pageId: string) => {
-    onPageChange(pageId);
+  // Filtrar elementos del menú basándose en los permisos del usuario
+  const menuItems = allMenuItems.filter((item) =>
+    hasPermission(item.permission)
+  );
+
+  const handleNavItemClick = (path: string) => {
+    navigate(path);
     // On mobile, close sidebar when navigating
     if (isMobile && onMobileClose) {
       onMobileClose();
@@ -122,18 +143,16 @@ export default function Sidebar({
       <nav className={styles.nav}>
         {menuItems.map((item) => {
           const Icon = item.icon;
+          const isActive = location.pathname === item.path;
           return (
-            <ProtectedComponent key={item.id} permission={item.permission}>
-              <button
-                onClick={() => handleNavItemClick(item.id)}
-                className={`${styles.navItem} ${
-                  currentPage === item.id ? styles.active : ""
-                }`}
-              >
-                <Icon size={20} />
-                {(!isCollapsed || isMobile) && <span>{item.label}</span>}
-              </button>
-            </ProtectedComponent>
+            <button
+              key={item.id}
+              onClick={() => handleNavItemClick(item.path)}
+              className={`${styles.navItem} ${isActive ? styles.active : ""}`}
+            >
+              <Icon size={20} />
+              {(!isCollapsed || isMobile) && <span>{item.label}</span>}
+            </button>
           );
         })}
       </nav>

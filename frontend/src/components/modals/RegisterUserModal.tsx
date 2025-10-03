@@ -120,12 +120,19 @@ export default function RegisterUserModal({
       newErrors.confirmPassword = "Las contraseñas no coinciden";
     }
 
-    // Validar username único (simulación)
-    if (
-      formData.username &&
-      (formData.username === "admin" || formData.username === "usuario1")
-    ) {
-      newErrors.username = "Este nombre de usuario ya existe";
+    // Validar longitud mínima de username
+    if (formData.username && formData.username.length < 3) {
+      newErrors.username =
+        "El nombre de usuario debe tener al menos 3 caracteres";
+    }
+
+    // Validar longitud mínima de nombres
+    if (formData.firstName && formData.firstName.length < 2) {
+      newErrors.firstName = "El nombre debe tener al menos 2 caracteres";
+    }
+
+    if (formData.lastName && formData.lastName.length < 2) {
+      newErrors.lastName = "El apellido debe tener al menos 2 caracteres";
     }
 
     setErrors(newErrors);

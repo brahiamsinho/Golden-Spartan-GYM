@@ -90,6 +90,17 @@ export default function RolesPage() {
       role.descripcion.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const formatDate = (dateString: string) => {
+    if (!dateString) return "N/A";
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return "N/A";
+      return date.toLocaleDateString("es-ES");
+    } catch {
+      return "N/A";
+    }
+  };
+
   const handleCreateRole = async () => {
     if (!newRole.nombre.trim()) return;
 
@@ -145,6 +156,16 @@ export default function RolesPage() {
     } catch (err) {
       setError("Error al eliminar rol");
       console.error("Error deleting role:", err);
+    }
+  };
+
+  const toggleRoleStatus = async (roleId: number) => {
+    try {
+      await apiService.toggleRoleStatus(roleId);
+      await loadRoles();
+    } catch (err) {
+      setError("Error al cambiar estado del rol");
+      console.error("Error toggling role status:", err);
     }
   };
 
@@ -324,9 +345,7 @@ export default function RolesPage() {
             <div className={styles.roleFooter}>
               <div className={styles.createdDate}>
                 <Calendar size={12} />
-                <span>
-                  Creado: {new Date(role.fecha_creacion).toLocaleDateString()}
-                </span>
+                <span>Creado: {formatDate(role.fecha_creacion)}</span>
               </div>
             </div>
           </div>

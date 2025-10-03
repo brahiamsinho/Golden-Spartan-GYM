@@ -52,6 +52,7 @@ class HasPermission(permissions.BasePermission):
 
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
+    pagination_class = None  # Deshabilitar paginación por defecto
 
     def get_serializer_class(self):
         if self.action == "create":
@@ -79,6 +80,40 @@ class UserViewSet(viewsets.ModelViewSet):
         elif self.action == "destroy":
             return [HasPermission("Eliminar Usuario")]
         return [IsAuthenticated()]
+
+    def list(self, request, *args, **kwargs):
+        """Listar usuarios con paginación personalizada"""
+        from django.core.paginator import Paginator
+
+        page = int(request.query_params.get("page", 1))
+        page_size = int(request.query_params.get("page_size", 10))
+
+        queryset = self.get_queryset()
+        paginator = Paginator(queryset, page_size)
+
+        try:
+            page_obj = paginator.page(page)
+        except:
+            page_obj = paginator.page(1)
+
+        serializer = self.get_serializer(page_obj.object_list, many=True)
+
+        return Response(
+            {
+                "results": serializer.data,
+                "count": paginator.count,
+                "total_pages": paginator.num_pages,
+                "current_page": page_obj.number,
+                "has_next": page_obj.has_next(),
+                "has_previous": page_obj.has_previous(),
+                "next_page": page_obj.next_page_number()
+                if page_obj.has_next()
+                else None,
+                "previous_page": page_obj.previous_page_number()
+                if page_obj.has_previous()
+                else None,
+            }
+        )
 
     def create(self, request, *args, **kwargs):
         print(f"Datos recibidos: {request.data}")
@@ -297,6 +332,36 @@ class RolViewSet(viewsets.ModelViewSet):
         except Exception as e:
             return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
+    @action(detail=True, methods=["post"])
+    def toggle_status(self, request, pk=None):
+        """Activar/desactivar rol"""
+        try:
+            rol = self.get_object()
+            rol.activo = not rol.activo
+            rol.save()
+
+            # Registrar en bitácora
+            activity_data = getattr(request, "activity_data", {})
+            Bitacora.log_activity(
+                usuario=request.user,
+                tipo_accion="toggle_role_status",
+                accion="Cambiar Estado de Rol",
+                descripcion=f'Rol "{rol.nombre}" {"activado" if rol.activo else "desactivado"}',
+                nivel="info",
+                ip_address=activity_data.get("ip_address", "127.0.0.1"),
+                user_agent=activity_data.get("user_agent", "Unknown"),
+                datos_adicionales={
+                    "rol_id": rol.id,
+                    "rol_nombre": rol.nombre,
+                    "nuevo_estado": rol.activo,
+                },
+            )
+
+            serializer = self.get_serializer(rol)
+            return Response(serializer.data, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
     def destroy(self, request, *args, **kwargs):
         try:
             rol = self.get_object()
@@ -344,7 +409,104 @@ class PermisoViewSet(viewsets.ModelViewSet):
     def get_permissions(self):
         if self.action == "list":
             return [HasPermission("Ver Permisos")]
+        elif self.action in ["create", "update", "partial_update", "destroy"]:
+            return [HasPermission("Gestionar Permisos")]
         return [HasPermission("Asignar Permisos")]
+
+    def create(self, request, *args, **kwargs):
+        try:
+            serializer = self.get_serializer(data=request.data)
+            if serializer.is_valid():
+                permiso = serializer.save()
+
+                # Registrar en bitácora
+                activity_data = getattr(request, "activity_data", {})
+                Bitacora.log_activity(
+                    usuario=request.user,
+                    tipo_accion="create_permission",
+                    accion="Crear Permiso",
+                    descripcion=f'Permiso "{permiso.nombre}" creado',
+                    nivel="info",
+                    ip_address=activity_data.get("ip_address", "127.0.0.1"),
+                    user_agent=activity_data.get("user_agent", "Unknown"),
+                    datos_adicionales={
+                        "permiso_id": permiso.id,
+                        "permiso_nombre": permiso.nombre,
+                    },
+                )
+
+                return Response(serializer.data, status=status.HTTP_201_CREATED)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+    def update(self, request, *args, **kwargs):
+        try:
+            permiso = self.get_object()
+            old_nombre = permiso.nombre
+
+            serializer = self.get_serializer(permiso, data=request.data)
+            if serializer.is_valid():
+                permiso = serializer.save()
+
+                # Registrar en bitácora
+                activity_data = getattr(request, "activity_data", {})
+                Bitacora.log_activity(
+                    usuario=request.user,
+                    tipo_accion="update_permission",
+                    accion="Actualizar Permiso",
+                    descripcion=f'Permiso "{old_nombre}" actualizado a "{permiso.nombre}"',
+                    nivel="info",
+                    ip_address=activity_data.get("ip_address", "127.0.0.1"),
+                    user_agent=activity_data.get("user_agent", "Unknown"),
+                    datos_adicionales={
+                        "permiso_id": permiso.id,
+                        "permiso_nombre_anterior": old_nombre,
+                        "permiso_nombre_nuevo": permiso.nombre,
+                    },
+                )
+
+                return Response(serializer.data)
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+    def destroy(self, request, *args, **kwargs):
+        try:
+            permiso = self.get_object()
+            permiso_nombre = permiso.nombre
+            permiso_id = permiso.id
+
+            # Verificar si el permiso está siendo usado por algún rol
+            if RolPermiso.objects.filter(permiso=permiso).exists():
+                return Response(
+                    {
+                        "error": "No se puede eliminar un permiso que está siendo usado por roles"
+                    },
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+            permiso.delete()
+
+            # Registrar en bitácora
+            activity_data = getattr(request, "activity_data", {})
+            Bitacora.log_activity(
+                usuario=request.user,
+                tipo_accion="delete_permission",
+                accion="Eliminar Permiso",
+                descripcion=f'Permiso "{permiso_nombre}" eliminado',
+                nivel="warning",
+                ip_address=activity_data.get("ip_address", "127.0.0.1"),
+                user_agent=activity_data.get("user_agent", "Unknown"),
+                datos_adicionales={
+                    "permiso_id": permiso_id,
+                    "permiso_nombre": permiso_nombre,
+                },
+            )
+
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
 
 class RolPermisoViewSet(viewsets.ModelViewSet):
@@ -593,3 +755,71 @@ def get_client_ip(request):
     else:
         ip = request.META.get("REMOTE_ADDR", "0.0.0.0")
     return ip
+
+
+# Dashboard views
+@api_view(["GET"])
+@permission_classes([IsAuthenticated])
+def dashboard_stats(request):
+    """Obtener estadísticas para el dashboard"""
+    try:
+        from django.db.models import Count
+        from datetime import datetime, timedelta
+
+        # Fecha de hoy
+        today = timezone.now().date()
+        yesterday = today - timedelta(days=1)
+
+        # Usuarios activos hoy (que han iniciado sesión hoy)
+        usuarios_activos_hoy = (
+            Bitacora.objects.filter(tipo_accion="login", fecha_hora__date=today)
+            .values("usuario")
+            .distinct()
+            .count()
+        )
+
+        # Usuarios activos ayer para comparar
+        usuarios_activos_ayer = (
+            Bitacora.objects.filter(tipo_accion="login", fecha_hora__date=yesterday)
+            .values("usuario")
+            .distinct()
+            .count()
+        )
+
+        # Intentos fallidos en las últimas 24 horas
+        intentos_fallidos = Bitacora.objects.filter(
+            tipo_accion="login_failed",
+            fecha_hora__gte=timezone.now() - timedelta(hours=24),
+        ).count()
+
+        # Total de usuarios en el sistema
+        total_usuarios = User.objects.filter(is_active=True).count()
+
+        # Total de roles
+        total_roles = Rol.objects.count()
+
+        # Actividad reciente (últimas 24 horas)
+        actividad_reciente = Bitacora.objects.filter(
+            fecha_hora__gte=timezone.now() - timedelta(hours=24)
+        ).count()
+
+        # Calcular diferencia de usuarios activos
+        diferencia_usuarios = usuarios_activos_hoy - usuarios_activos_ayer
+
+        stats = {
+            "usuarios_activos_hoy": usuarios_activos_hoy,
+            "diferencia_usuarios": diferencia_usuarios,
+            "intentos_fallidos": intentos_fallidos,
+            "total_usuarios": total_usuarios,
+            "total_roles": total_roles,
+            "actividad_reciente": actividad_reciente,
+            "sistema_operativo": True,  # Siempre true por ahora
+        }
+
+        return Response(stats)
+
+    except Exception as e:
+        return Response(
+            {"error": f"Error al obtener estadísticas: {str(e)}"},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )

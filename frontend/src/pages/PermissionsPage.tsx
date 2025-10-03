@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Lock,
   Search,
@@ -8,21 +8,27 @@ import {
   Settings,
   Database,
   BarChart,
+  RefreshCw,
+  Eye,
+  Plus,
   Edit,
   Trash2,
-  Plus,
-  X,
+  Activity,
+  Key,
+  UserCheck,
+  UserX,
+  ShieldCheck,
+  ShieldX,
+  FileText,
+  Download,
 } from "lucide-react";
+import apiService from "../services/api";
 import styles from "./PermissionsPage.module.css";
 
 interface Permission {
-  id: string;
-  name: string;
-  description: string;
-  module: string;
-  isSystem: boolean;
-  usedInRoles: number;
-  createdAt: string;
+  id: number;
+  nombre: string;
+  descripcion: string;
 }
 
 interface Module {
@@ -32,473 +38,439 @@ interface Module {
   permissions: Permission[];
 }
 
-const PERMISSIONS_DATA: Permission[] = [
-  // Dashboard y Sistema
-  {
-    id: "dashboard.view",
-    name: "Ver Dashboard",
-    description: "Acceso al panel principal del sistema",
-    module: "Dashboard",
-    isSystem: true,
-    usedInRoles: 4,
-    createdAt: "2024-01-01",
-  },
-  {
-    id: "system.admin",
-    name: "Administrador del Sistema",
-    description: "Acceso completo a todas las funciones",
-    module: "Sistema",
-    isSystem: true,
-    usedInRoles: 1,
-    createdAt: "2024-01-01",
-  },
-
-  // Usuarios
-  {
-    id: "users.view",
-    name: "Ver Usuarios",
-    description: "Ver lista de usuarios del sistema",
-    module: "Usuarios",
-    isSystem: false,
-    usedInRoles: 3,
-    createdAt: "2024-01-01",
-  },
-  {
-    id: "users.create",
-    name: "Crear Usuarios",
-    description: "Registrar nuevos usuarios",
-    module: "Usuarios",
-    isSystem: false,
-    usedInRoles: 2,
-    createdAt: "2024-01-01",
-  },
-  {
-    id: "users.edit",
-    name: "Editar Usuarios",
-    description: "Modificar información de usuarios",
-    module: "Usuarios",
-    isSystem: false,
-    usedInRoles: 2,
-    createdAt: "2024-01-01",
-  },
-  {
-    id: "users.delete",
-    name: "Eliminar Usuarios",
-    description: "Eliminar usuarios del sistema",
-    module: "Usuarios",
-    isSystem: false,
-    usedInRoles: 1,
-    createdAt: "2024-01-01",
-  },
-
-  // Roles y Permisos
-  {
-    id: "roles.view",
-    name: "Ver Roles",
-    description: "Ver lista de roles del sistema",
-    module: "Roles",
-    isSystem: false,
-    usedInRoles: 2,
-    createdAt: "2024-01-01",
-  },
-  {
-    id: "roles.create",
-    name: "Crear Roles",
-    description: "Crear nuevos roles",
-    module: "Roles",
-    isSystem: false,
-    usedInRoles: 1,
-    createdAt: "2024-01-01",
-  },
-  {
-    id: "roles.edit",
-    name: "Editar Roles",
-    description: "Modificar roles existentes",
-    module: "Roles",
-    isSystem: false,
-    usedInRoles: 1,
-    createdAt: "2024-01-01",
-  },
-  {
-    id: "roles.delete",
-    name: "Eliminar Roles",
-    description: "Eliminar roles del sistema",
-    module: "Roles",
-    isSystem: false,
-    usedInRoles: 1,
-    createdAt: "2024-01-01",
-  },
-
-  // Bitácora
-  {
-    id: "bitacora.view",
-    name: "Ver Bitácora",
-    description: "Acceso al registro de actividades del sistema",
-    module: "Bitácora",
-    isSystem: false,
-    usedInRoles: 2,
-    createdAt: "2024-01-01",
-  },
-
-  // Reportes
-  {
-    id: "reports.view",
-    name: "Ver Reportes",
-    description: "Acceso a reportes y estadísticas",
-    module: "Reportes",
-    isSystem: false,
-    usedInRoles: 2,
-    createdAt: "2024-01-01",
-  },
-  {
-    id: "reports.export",
-    name: "Exportar Reportes",
-    description: "Descargar reportes en diferentes formatos",
-    module: "Reportes",
-    isSystem: false,
-    usedInRoles: 1,
-    createdAt: "2024-01-01",
-  },
-];
-
-const MODULE_ICONS: Record<
-  string,
-  { icon: React.ComponentType<any>; color: string }
-> = {
-  Dashboard: { icon: BarChart, color: "#3b82f6" },
-  Sistema: { icon: Settings, color: "#ef4444" },
-  Usuarios: { icon: Users, color: "#22c55e" },
-  Roles: { icon: Shield, color: "#f59e0b" },
-  Bitácora: { icon: Database, color: "#8b5cf6" },
-  Reportes: { icon: Database, color: "#06b6d4" },
+const MODULE_ICONS = {
+  dashboard: BarChart,
+  users: Users,
+  roles: Shield,
+  permissions: Lock,
+  bitacora: Database,
+  system: Settings,
+  otros: Database,
 };
 
 export default function PermissionsPage() {
-  const [permissions, setPermissions] =
-    useState<Permission[]>(PERMISSIONS_DATA);
+  const [permissions, setPermissions] = useState<Permission[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedModule, setSelectedModule] = useState<string>("all");
-  const [showSystemPermissions, setShowSystemPermissions] = useState(true);
   const [showCreateModal, setShowCreateModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
   const [selectedPermission, setSelectedPermission] =
     useState<Permission | null>(null);
-  const [showEditModal, setShowEditModal] = useState(false);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
-
   const [newPermission, setNewPermission] = useState({
-    name: "",
-    description: "",
-    module: "Usuarios",
-    id: "",
+    nombre: "",
+    descripcion: "",
   });
 
-  // Filtrar permisos
-  const filteredPermissions = permissions.filter((permission) => {
-    const matchesSearch =
-      permission.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      permission.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      permission.module.toLowerCase().includes(searchTerm.toLowerCase());
+  useEffect(() => {
+    loadPermissions();
+  }, []);
 
-    const matchesModule =
-      selectedModule === "all" || permission.module === selectedModule;
-    const matchesSystemFilter = showSystemPermissions || !permission.isSystem;
-
-    return matchesSearch && matchesModule && matchesSystemFilter;
-  });
-
-  // Agrupar permisos por módulo
-  const groupedPermissions = filteredPermissions.reduce((acc, permission) => {
-    if (!acc[permission.module]) {
-      acc[permission.module] = [];
+  const loadPermissions = async () => {
+    try {
+      setLoading(true);
+      setError(null);
+      const data = await apiService.getPermissions();
+      setPermissions(data);
+    } catch (err) {
+      setError("Error al cargar permisos");
+      console.error("Error loading permissions:", err);
+    } finally {
+      setLoading(false);
     }
-    acc[permission.module].push(permission);
-    return acc;
-  }, {} as Record<string, Permission[]>);
-
-  const modules = Array.from(new Set(permissions.map((p) => p.module)));
-  const totalPermissions = permissions.length;
-  const systemPermissions = permissions.filter((p) => p.isSystem).length;
-  const customPermissions = permissions.filter((p) => !p.isSystem).length;
-
-  const handleCreatePermission = () => {
-    if (!newPermission.name.trim() || !newPermission.description.trim()) return;
-
-    const permission: Permission = {
-      id:
-        newPermission.id ||
-        `${newPermission.module.toLowerCase()}.${newPermission.name
-          .toLowerCase()
-          .replace(/\s+/g, "_")}`,
-      name: newPermission.name,
-      description: newPermission.description,
-      module: newPermission.module,
-      isSystem: false,
-      usedInRoles: 0,
-      createdAt: new Date().toISOString().split("T")[0],
-    };
-
-    setPermissions([...permissions, permission]);
-    setNewPermission({ name: "", description: "", module: "Usuarios", id: "" });
-    setShowCreateModal(false);
   };
 
-  const handleEditPermission = () => {
-    if (!selectedPermission || !newPermission.name.trim()) return;
-
-    setPermissions(
-      permissions.map((permission) =>
-        permission.id === selectedPermission.id
-          ? {
-              ...permission,
-              name: newPermission.name,
-              description: newPermission.description,
-              module: newPermission.module,
-            }
-          : permission
-      )
+  const getModuleIcon = (module: string) => {
+    return (
+      MODULE_ICONS[module.toLowerCase() as keyof typeof MODULE_ICONS] ||
+      Database
     );
-    setShowEditModal(false);
-    setSelectedPermission(null);
-    setNewPermission({ name: "", description: "", module: "Usuarios", id: "" });
   };
 
-  const handleDeletePermission = () => {
-    if (!selectedPermission) return;
+  const getPermissionIcon = (permissionName: string) => {
+    const name = permissionName.toLowerCase();
 
-    if (selectedPermission.isSystem) {
-      alert("No se pueden eliminar permisos del sistema");
+    if (name.includes("ver") || name.includes("view")) return Eye;
+    if (name.includes("crear") || name.includes("create")) return Plus;
+    if (name.includes("editar") || name.includes("edit")) return Edit;
+    if (name.includes("eliminar") || name.includes("delete")) return Trash2;
+    if (name.includes("asignar") || name.includes("assign")) return Key;
+    if (name.includes("gestionar") || name.includes("manage")) return Settings;
+    if (name.includes("exportar") || name.includes("export")) return Download;
+    if (name.includes("dashboard")) return BarChart;
+    if (name.includes("usuario") || name.includes("user")) return Users;
+    if (name.includes("rol") || name.includes("role")) return Shield;
+    if (name.includes("permiso") || name.includes("permission")) return Lock;
+    if (name.includes("bitacora") || name.includes("log")) return Activity;
+    if (name.includes("sistema") || name.includes("system")) return Settings;
+
+    return Lock;
+  };
+
+  const getPermissionColor = (permissionName: string) => {
+    const name = permissionName.toLowerCase();
+
+    if (name.includes("ver") || name.includes("view")) return "#3b82f6";
+    if (name.includes("crear") || name.includes("create")) return "#10b981";
+    if (name.includes("editar") || name.includes("edit")) return "#f59e0b";
+    if (name.includes("eliminar") || name.includes("delete")) return "#ef4444";
+    if (name.includes("asignar") || name.includes("assign")) return "#8b5cf6";
+    if (name.includes("gestionar") || name.includes("manage")) return "#06b6d4";
+    if (name.includes("exportar") || name.includes("export")) return "#84cc16";
+
+    return "#64748b";
+  };
+
+  const handleCreatePermission = async () => {
+    if (!newPermission.nombre.trim() || !newPermission.descripcion.trim()) {
+      setError("Todos los campos son requeridos");
       return;
     }
 
-    if (selectedPermission.usedInRoles > 0) {
-      alert("No se puede eliminar un permiso que está siendo usado en roles");
+    try {
+      setLoading(true);
+      setError(null);
+      await apiService.createPermission(newPermission);
+      await loadPermissions();
+      setShowCreateModal(false);
+      setNewPermission({ nombre: "", descripcion: "" });
+    } catch (err) {
+      setError("Error al crear permiso");
+      console.error("Error creating permission:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleEditPermission = async () => {
+    if (
+      !selectedPermission ||
+      !newPermission.nombre.trim() ||
+      !newPermission.descripcion.trim()
+    ) {
+      setError("Todos los campos son requeridos");
       return;
     }
 
-    setPermissions(
-      permissions.filter(
-        (permission) => permission.id !== selectedPermission.id
-      )
-    );
-    setShowDeleteModal(false);
-    setSelectedPermission(null);
+    try {
+      setLoading(true);
+      setError(null);
+      await apiService.updatePermission(selectedPermission.id, newPermission);
+      await loadPermissions();
+      setShowEditModal(false);
+      setSelectedPermission(null);
+      setNewPermission({ nombre: "", descripcion: "" });
+    } catch (err) {
+      setError("Error al actualizar permiso");
+      console.error("Error updating permission:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeletePermission = async (permissionId: number) => {
+    if (
+      !window.confirm("¿Estás seguro de que quieres eliminar este permiso?")
+    ) {
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError(null);
+      await apiService.deletePermission(permissionId);
+      await loadPermissions();
+    } catch (err) {
+      setError("Error al eliminar permiso");
+      console.error("Error deleting permission:", err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const openEditModal = (permission: Permission) => {
     setSelectedPermission(permission);
     setNewPermission({
-      name: permission.name,
-      description: permission.description,
-      module: permission.module,
-      id: permission.id,
+      nombre: permission.nombre,
+      descripcion: permission.descripcion,
     });
     setShowEditModal(true);
   };
 
-  const openDeleteModal = (permission: Permission) => {
-    setSelectedPermission(permission);
-    setShowDeleteModal(true);
+  const getModuleColor = (module: string) => {
+    const colors = {
+      dashboard: "#3b82f6",
+      users: "#10b981",
+      roles: "#f59e0b",
+      permissions: "#8b5cf6",
+      bitacora: "#ef4444",
+      system: "#6b7280",
+      otros: "#64748b",
+    };
+    return colors[module.toLowerCase() as keyof typeof colors] || "#64748b";
   };
 
+  // Agrupar permisos por módulo (basado en el nombre)
+  const groupedPermissions = permissions.reduce((acc, permission) => {
+    let module = "otros";
+
+    // Mapeo inteligente de módulos
+    const name = permission.nombre.toLowerCase();
+    if (name.includes("dashboard")) module = "dashboard";
+    else if (name.includes("usuario") || name.includes("user"))
+      module = "users";
+    else if (name.includes("rol") || name.includes("role")) module = "roles";
+    else if (name.includes("permiso") || name.includes("permission"))
+      module = "permissions";
+    else if (name.includes("bitacora") || name.includes("log"))
+      module = "bitacora";
+    else if (name.includes("sistema") || name.includes("system"))
+      module = "system";
+    else {
+      // Intentar extraer del formato "modulo.accion"
+      const parts = permission.nombre.split(".");
+      if (parts.length > 1) {
+        module = parts[0];
+      }
+    }
+
+    if (!acc[module]) {
+      acc[module] = [];
+    }
+    acc[module].push(permission);
+    return acc;
+  }, {} as Record<string, Permission[]>);
+
+  // Filtrar permisos
+  const filteredPermissions = permissions.filter((permission) => {
+    const matchesSearch =
+      permission.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      permission.descripcion.toLowerCase().includes(searchTerm.toLowerCase());
+
+    // Usar el mismo mapeo inteligente para el filtro
+    let module = "otros";
+    const name = permission.nombre.toLowerCase();
+    if (name.includes("dashboard")) module = "dashboard";
+    else if (name.includes("usuario") || name.includes("user"))
+      module = "users";
+    else if (name.includes("rol") || name.includes("role")) module = "roles";
+    else if (name.includes("permiso") || name.includes("permission"))
+      module = "permissions";
+    else if (name.includes("bitacora") || name.includes("log"))
+      module = "bitacora";
+    else if (name.includes("sistema") || name.includes("system"))
+      module = "system";
+    else {
+      const parts = permission.nombre.split(".");
+      if (parts.length > 1) {
+        module = parts[0];
+      }
+    }
+
+    const matchesModule = selectedModule === "all" || module === selectedModule;
+    return matchesSearch && matchesModule;
+  });
+
+  // Obtener módulos únicos
+  const modules = Object.keys(groupedPermissions).map((module) => ({
+    name: module,
+    icon: getModuleIcon(module),
+    color: getModuleColor(module),
+    permissions: groupedPermissions[module],
+  }));
+
+  if (loading) {
+    return (
+      <div className={styles.loading}>
+        <div className={styles.spinner}></div>
+        <p>Cargando permisos...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className={styles.error}>
+        <p>{error}</p>
+        <button onClick={loadPermissions} className={styles.retryButton}>
+          Reintentar
+        </button>
+      </div>
+    );
+  }
+
   return (
-    <div className={styles.container}>
+    <div className={styles.permissions}>
       <div className={styles.header}>
-        <div className={styles.titleSection}>
-          <h1 className={styles.title}>
-            <Lock className={styles.titleIcon} />
-            Gestión de Permisos
-          </h1>
-          <p className={styles.subtitle}>
-            Administrar permisos del sistema y sus asignaciones
-          </p>
+        <div>
+          <h1>Permisos del Sistema</h1>
+          <p>Gestiona los permisos disponibles en el sistema</p>
         </div>
-        <button
-          onClick={() => setShowCreateModal(true)}
-          className={styles.createButton}
+        <div className={styles.headerActions}>
+          <button
+            onClick={() => setShowCreateModal(true)}
+            className={styles.createButton}
+          >
+            <Plus size={20} />
+            Nuevo Permiso
+          </button>
+          <button onClick={loadPermissions} className={styles.refreshButton}>
+            <RefreshCw size={20} />
+            Actualizar
+          </button>
+        </div>
+      </div>
+
+      <div className={styles.filters}>
+        <div className={styles.searchBox}>
+          <Search size={20} />
+          <input
+            type="text"
+            placeholder="Buscar permisos..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
+
+        <select
+          value={selectedModule}
+          onChange={(e) => setSelectedModule(e.target.value)}
+          className={styles.filterSelect}
         >
-          <Plus size={16} />
-          Nuevo Permiso
+          <option value="all">Todos los módulos</option>
+          {modules.map((module) => (
+            <option key={module.name} value={module.name}>
+              {module.name.charAt(0).toUpperCase() + module.name.slice(1)}
+            </option>
+          ))}
+        </select>
+
+        <button className={styles.filterButton}>
+          <Filter size={20} />
+          Filtros
         </button>
       </div>
 
       <div className={styles.stats}>
         <div className={styles.statCard}>
-          <Lock className={styles.statIcon} />
-          <div className={styles.statInfo}>
-            <span className={styles.statValue}>{totalPermissions}</span>
+          <div
+            className={styles.statIcon}
+            style={{ backgroundColor: "#3b82f6" }}
+          >
+            <Lock size={20} />
+          </div>
+          <div className={styles.statContent}>
+            <span className={styles.statValue}>{permissions.length}</span>
             <span className={styles.statLabel}>Total Permisos</span>
           </div>
         </div>
         <div className={styles.statCard}>
-          <Settings className={styles.statIcon} />
-          <div className={styles.statInfo}>
-            <span className={styles.statValue}>{systemPermissions}</span>
-            <span className={styles.statLabel}>Sistema</span>
+          <div
+            className={styles.statIcon}
+            style={{ backgroundColor: "#10b981" }}
+          >
+            <Database size={20} />
           </div>
-        </div>
-        <div className={styles.statCard}>
-          <Edit className={styles.statIcon} />
-          <div className={styles.statInfo}>
-            <span className={styles.statValue}>{customPermissions}</span>
-            <span className={styles.statLabel}>Personalizados</span>
-          </div>
-        </div>
-        <div className={styles.statCard}>
-          <Shield className={styles.statIcon} />
-          <div className={styles.statInfo}>
+          <div className={styles.statContent}>
             <span className={styles.statValue}>{modules.length}</span>
             <span className={styles.statLabel}>Módulos</span>
           </div>
         </div>
-      </div>
-
-      <div className={styles.controls}>
-        <div className={styles.searchSection}>
-          <div className={styles.searchBox}>
-            <Search className={styles.searchIcon} />
-            <input
-              type="text"
-              placeholder="Buscar permisos..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className={styles.searchInput}
-            />
+        <div className={styles.statCard}>
+          <div
+            className={styles.statIcon}
+            style={{ backgroundColor: "#f59e0b" }}
+          >
+            <Filter size={20} />
           </div>
-        </div>
-
-        <div className={styles.filterSection}>
-          <div className={styles.filterGroup}>
-            <Filter className={styles.filterIcon} />
-            <select
-              value={selectedModule}
-              onChange={(e) => setSelectedModule(e.target.value)}
-              className={styles.filterSelect}
-            >
-              <option value="all">Todos los módulos</option>
-              {modules.map((module) => (
-                <option key={module} value={module}>
-                  {module}
-                </option>
-              ))}
-            </select>
+          <div className={styles.statContent}>
+            <span className={styles.statValue}>
+              {filteredPermissions.length}
+            </span>
+            <span className={styles.statLabel}>Filtrados</span>
           </div>
-
-          <label className={styles.checkboxLabel}>
-            <input
-              type="checkbox"
-              checked={showSystemPermissions}
-              onChange={(e) => setShowSystemPermissions(e.target.checked)}
-              className={styles.checkbox}
-            />
-            <span>Mostrar permisos del sistema</span>
-          </label>
         </div>
       </div>
 
-      <div className={styles.permissionsContainer}>
-        {Object.entries(groupedPermissions).map(
-          ([moduleName, modulePermissions]) => {
-            const moduleInfo = MODULE_ICONS[moduleName] || {
-              icon: Lock,
-              color: "#6b7280",
-            };
-            const ModuleIcon = moduleInfo.icon;
-
-            return (
-              <div key={moduleName} className={styles.moduleSection}>
-                <div className={styles.moduleHeader}>
-                  <div className={styles.moduleTitle}>
-                    <div
-                      className={styles.moduleIcon}
-                      style={{
-                        backgroundColor: moduleInfo.color + "20",
-                        color: moduleInfo.color,
-                      }}
-                    >
-                      <ModuleIcon size={20} />
-                    </div>
-                    <h3>{moduleName}</h3>
-                    <span className={styles.permissionCount}>
-                      {modulePermissions.length} permiso
-                      {modulePermissions.length !== 1 ? "s" : ""}
-                    </span>
-                  </div>
+      <div className={styles.permissionsGrid}>
+        {modules.map((module) => {
+          const Icon = module.icon;
+          return (
+            <div key={module.name} className={styles.permissionCard}>
+              <div className={styles.permissionHeader}>
+                <div
+                  className={styles.moduleIcon}
+                  style={{ backgroundColor: module.color }}
+                >
+                  <Icon size={24} />
                 </div>
-
-                <div className={styles.permissionsGrid}>
-                  {modulePermissions.map((permission) => (
-                    <div
-                      key={permission.id}
-                      className={`${styles.permissionCard} ${
-                        permission.isSystem ? styles.systemPermission : ""
-                      }`}
-                    >
-                      <div className={styles.permissionHeader}>
-                        <div className={styles.permissionInfo}>
-                          <h4 className={styles.permissionName}>
-                            {permission.isSystem && (
-                              <Settings
-                                size={14}
-                                className={styles.systemIcon}
-                              />
-                            )}
-                            {permission.name}
-                          </h4>
-                          <p className={styles.permissionDescription}>
-                            {permission.description}
-                          </p>
-                        </div>
-
-                        {!permission.isSystem && (
-                          <div className={styles.permissionActions}>
-                            <button
-                              onClick={() => openEditModal(permission)}
-                              className={styles.actionButton}
-                              title="Editar permiso"
-                            >
-                              <Edit size={14} />
-                            </button>
-                            <button
-                              onClick={() => openDeleteModal(permission)}
-                              className={`${styles.actionButton} ${styles.delete}`}
-                              title="Eliminar permiso"
-                            >
-                              <Trash2 size={14} />
-                            </button>
-                          </div>
-                        )}
-                      </div>
-
-                      <div className={styles.permissionFooter}>
-                        <div className={styles.permissionMeta}>
-                          <span className={styles.permissionId}>
-                            ID: {permission.id}
-                          </span>
-                          <span className={styles.usageInfo}>
-                            <Shield size={12} />
-                            Usado en {permission.usedInRoles} rol
-                            {permission.usedInRoles !== 1 ? "es" : ""}
-                          </span>
-                        </div>
-
-                        <div className={styles.permissionBadges}>
-                          {permission.isSystem ? (
-                            <span className={styles.systemBadge}>Sistema</span>
-                          ) : (
-                            <span className={styles.customBadge}>
-                              Personalizado
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
+                <div className={styles.moduleInfo}>
+                  <h3 className={styles.moduleName}>
+                    {module.name.charAt(0).toUpperCase() + module.name.slice(1)}
+                  </h3>
+                  <p className={styles.moduleCount}>
+                    {module.permissions.length} permisos
+                  </p>
                 </div>
               </div>
-            );
-          }
-        )}
+
+              <div className={styles.permissionsList}>
+                {module.permissions.map((permission) => {
+                  const PermissionIcon = getPermissionIcon(permission.nombre);
+                  const permissionColor = getPermissionColor(permission.nombre);
+                  return (
+                    <div key={permission.id} className={styles.permissionItem}>
+                      <div
+                        className={styles.permissionIcon}
+                        style={{
+                          background: `linear-gradient(135deg, ${permissionColor}20, ${permissionColor}10)`,
+                          color: permissionColor,
+                          border: `1px solid ${permissionColor}30`,
+                        }}
+                      >
+                        <PermissionIcon size={20} />
+                      </div>
+                      <div className={styles.permissionInfo}>
+                        <h4 className={styles.permissionName}>
+                          {permission.nombre}
+                        </h4>
+                        <p className={styles.permissionDescription}>
+                          {permission.descripcion}
+                        </p>
+                      </div>
+                      <div className={styles.permissionActions}>
+                        <button
+                          onClick={() => openEditModal(permission)}
+                          className={styles.actionButton}
+                          title="Editar permiso"
+                        >
+                          <Edit size={16} />
+                        </button>
+                        <button
+                          onClick={() => handleDeletePermission(permission.id)}
+                          className={`${styles.actionButton} ${styles.deleteButton}`}
+                          title="Eliminar permiso"
+                        >
+                          <Trash2 size={16} />
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })}
       </div>
+
+      {filteredPermissions.length === 0 && (
+        <div className={styles.emptyState}>
+          <Lock size={48} />
+          <h3>No se encontraron permisos</h3>
+          <p>Intenta ajustar los filtros de búsqueda</p>
+        </div>
+      )}
 
       {/* Modal Crear Permiso */}
       {showCreateModal && (
@@ -513,77 +485,39 @@ export default function PermissionsPage() {
                 <X size={20} />
               </button>
             </div>
-
             <div className={styles.modalBody}>
-              <div className={styles.field}>
-                <label className={styles.label}>Nombre del Permiso *</label>
+              {error && <div className={styles.errorMessage}>{error}</div>}
+              <div className={styles.formGroup}>
+                <label>Nombre del Permiso</label>
                 <input
                   type="text"
-                  value={newPermission.name}
+                  value={newPermission.nombre}
                   onChange={(e) =>
-                    setNewPermission((prev) => ({
-                      ...prev,
-                      name: e.target.value,
-                    }))
+                    setNewPermission({
+                      ...newPermission,
+                      nombre: e.target.value,
+                    })
                   }
-                  className={styles.input}
-                  placeholder="Ej: Ver Reportes de Ventas"
+                  placeholder="Ej: users.create"
+                  className={styles.formInput}
                 />
               </div>
-
-              <div className={styles.field}>
-                <label className={styles.label}>ID del Permiso</label>
-                <input
-                  type="text"
-                  value={newPermission.id}
-                  onChange={(e) =>
-                    setNewPermission((prev) => ({
-                      ...prev,
-                      id: e.target.value,
-                    }))
-                  }
-                  className={styles.input}
-                  placeholder="Ej: reports.sales.view (opcional, se genera automáticamente)"
-                />
-              </div>
-
-              <div className={styles.field}>
-                <label className={styles.label}>Descripción *</label>
+              <div className={styles.formGroup}>
+                <label>Descripción</label>
                 <textarea
-                  value={newPermission.description}
+                  value={newPermission.descripcion}
                   onChange={(e) =>
-                    setNewPermission((prev) => ({
-                      ...prev,
-                      description: e.target.value,
-                    }))
+                    setNewPermission({
+                      ...newPermission,
+                      descripcion: e.target.value,
+                    })
                   }
-                  className={styles.textarea}
-                  placeholder="Descripción detallada del permiso"
+                  placeholder="Descripción del permiso..."
+                  className={styles.formTextarea}
                   rows={3}
                 />
               </div>
-
-              <div className={styles.field}>
-                <label className={styles.label}>Módulo *</label>
-                <select
-                  value={newPermission.module}
-                  onChange={(e) =>
-                    setNewPermission((prev) => ({
-                      ...prev,
-                      module: e.target.value,
-                    }))
-                  }
-                  className={styles.select}
-                >
-                  {modules.map((module) => (
-                    <option key={module} value={module}>
-                      {module}
-                    </option>
-                  ))}
-                </select>
-              </div>
             </div>
-
             <div className={styles.modalFooter}>
               <button
                 onClick={() => setShowCreateModal(false)}
@@ -594,9 +528,9 @@ export default function PermissionsPage() {
               <button
                 onClick={handleCreatePermission}
                 className={styles.saveButton}
+                disabled={loading}
               >
-                <Plus size={16} />
-                Crear Permiso
+                {loading ? "Creando..." : "Crear Permiso"}
               </button>
             </div>
           </div>
@@ -604,7 +538,7 @@ export default function PermissionsPage() {
       )}
 
       {/* Modal Editar Permiso */}
-      {showEditModal && (
+      {showEditModal && selectedPermission && (
         <div className={styles.modal}>
           <div className={styles.modalContent}>
             <div className={styles.modalHeader}>
@@ -616,59 +550,39 @@ export default function PermissionsPage() {
                 <X size={20} />
               </button>
             </div>
-
             <div className={styles.modalBody}>
-              <div className={styles.field}>
-                <label className={styles.label}>Nombre del Permiso *</label>
+              {error && <div className={styles.errorMessage}>{error}</div>}
+              <div className={styles.formGroup}>
+                <label>Nombre del Permiso</label>
                 <input
                   type="text"
-                  value={newPermission.name}
+                  value={newPermission.nombre}
                   onChange={(e) =>
-                    setNewPermission((prev) => ({
-                      ...prev,
-                      name: e.target.value,
-                    }))
+                    setNewPermission({
+                      ...newPermission,
+                      nombre: e.target.value,
+                    })
                   }
-                  className={styles.input}
+                  placeholder="Ej: users.create"
+                  className={styles.formInput}
                 />
               </div>
-
-              <div className={styles.field}>
-                <label className={styles.label}>Descripción *</label>
+              <div className={styles.formGroup}>
+                <label>Descripción</label>
                 <textarea
-                  value={newPermission.description}
+                  value={newPermission.descripcion}
                   onChange={(e) =>
-                    setNewPermission((prev) => ({
-                      ...prev,
-                      description: e.target.value,
-                    }))
+                    setNewPermission({
+                      ...newPermission,
+                      descripcion: e.target.value,
+                    })
                   }
-                  className={styles.textarea}
+                  placeholder="Descripción del permiso..."
+                  className={styles.formTextarea}
                   rows={3}
                 />
               </div>
-
-              <div className={styles.field}>
-                <label className={styles.label}>Módulo *</label>
-                <select
-                  value={newPermission.module}
-                  onChange={(e) =>
-                    setNewPermission((prev) => ({
-                      ...prev,
-                      module: e.target.value,
-                    }))
-                  }
-                  className={styles.select}
-                >
-                  {modules.map((module) => (
-                    <option key={module} value={module}>
-                      {module}
-                    </option>
-                  ))}
-                </select>
-              </div>
             </div>
-
             <div className={styles.modalFooter}>
               <button
                 onClick={() => setShowEditModal(false)}
@@ -679,67 +593,9 @@ export default function PermissionsPage() {
               <button
                 onClick={handleEditPermission}
                 className={styles.saveButton}
+                disabled={loading}
               >
-                <Edit size={16} />
-                Guardar Cambios
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Modal Eliminar Permiso */}
-      {showDeleteModal && selectedPermission && (
-        <div className={styles.modal}>
-          <div className={styles.modalContent}>
-            <div className={styles.modalHeader}>
-              <h2>Eliminar Permiso</h2>
-              <button
-                onClick={() => setShowDeleteModal(false)}
-                className={styles.closeButton}
-              >
-                <X size={20} />
-              </button>
-            </div>
-
-            <div className={styles.modalBody}>
-              <div className={styles.deleteWarning}>
-                <div className={styles.warningIcon}>⚠️</div>
-                <div>
-                  <p>
-                    ¿Estás seguro de que quieres eliminar el permiso{" "}
-                    <strong>"{selectedPermission.name}"</strong>?
-                  </p>
-                  {selectedPermission.usedInRoles > 0 ? (
-                    <p className={styles.errorText}>
-                      Este permiso está siendo usado en{" "}
-                      {selectedPermission.usedInRoles} roles. No se puede
-                      eliminar.
-                    </p>
-                  ) : (
-                    <p>Esta acción no se puede deshacer.</p>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            <div className={styles.modalFooter}>
-              <button
-                onClick={() => setShowDeleteModal(false)}
-                className={styles.cancelButton}
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={handleDeletePermission}
-                className={styles.deleteButton}
-                disabled={
-                  selectedPermission.usedInRoles > 0 ||
-                  selectedPermission.isSystem
-                }
-              >
-                <Trash2 size={16} />
-                Eliminar Permiso
+                {loading ? "Actualizando..." : "Actualizar Permiso"}
               </button>
             </div>
           </div>

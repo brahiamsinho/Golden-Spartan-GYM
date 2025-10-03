@@ -22,7 +22,7 @@ interface Usuario {
   first_name: string;
   last_name: string;
   is_active: boolean;
-  date_joined: string;
+  date_joined: string | null;
   last_login: string | null;
   roles?: { id: number; nombre: string }[];
   permisos?: string[];
@@ -48,18 +48,46 @@ export default function UsersPage() {
   const [usuarios, setUsuarios] = useState<Usuario[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [pagination, setPagination] = useState({
+    currentPage: 1,
+    totalPages: 1,
+    totalCount: 0,
+    hasNext: false,
+    hasPrevious: false,
+  });
 
   // Cargar usuarios del backend
   useEffect(() => {
     loadUsers();
   }, []);
 
-  const loadUsers = async () => {
+  const loadUsers = async (page = 1) => {
     try {
       setLoading(true);
       setError(null);
-      const users = await apiService.getUsers();
-      setUsuarios(users);
+      const response = await apiService.getUsers(page, 10);
+
+      if (response.results) {
+        // Respuesta paginada
+        setUsuarios(response.results);
+        setPagination({
+          currentPage: response.current_page,
+          totalPages: response.total_pages,
+          totalCount: response.count,
+          hasNext: response.has_next,
+          hasPrevious: response.has_previous,
+        });
+      } else {
+        // Respuesta sin paginación (fallback)
+        setUsuarios(response);
+        setPagination({
+          currentPage: 1,
+          totalPages: 1,
+          totalCount: response.length,
+          hasNext: false,
+          hasPrevious: false,
+        });
+      }
     } catch (err) {
       console.error("Error cargando usuarios:", err);
       setError(
@@ -162,13 +190,26 @@ export default function UsersPage() {
       : "Sin rol";
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString();
+  const formatDate = (dateString: string | null) => {
+    if (!dateString) return "N/A";
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return "N/A";
+      return date.toLocaleDateString("es-ES");
+    } catch {
+      return "N/A";
+    }
   };
 
   const formatDateTime = (dateString: string | null) => {
     if (!dateString) return "Nunca";
-    return new Date(dateString).toLocaleString();
+    try {
+      const date = new Date(dateString);
+      if (isNaN(date.getTime())) return "Nunca";
+      return date.toLocaleString("es-ES");
+    } catch {
+      return "Nunca";
+    }
   };
 
   const filteredUsuarios = usuarios.filter((usuario) => {
@@ -371,14 +412,40 @@ export default function UsersPage() {
 
       <div className={styles.pagination}>
         <span>
-          Mostrando {filteredUsuarios.length} de {usuarios.length} usuarios
+          Mostrando {usuarios.length} de {pagination.totalCount} usuarios
         </span>
         <div className={styles.paginationButtons}>
-          <button>Anterior</button>
-          <button className={styles.active}>1</button>
-          <button>2</button>
-          <button>3</button>
-          <button>Siguiente</button>
+          <button
+            onClick={() => loadUsers(pagination.currentPage - 1)}
+            disabled={!pagination.hasPrevious}
+          >
+            Anterior
+          </button>
+
+          {Array.from(
+            { length: Math.min(5, pagination.totalPages) },
+            (_, i) => {
+              const pageNum = i + 1;
+              return (
+                <button
+                  key={pageNum}
+                  onClick={() => loadUsers(pageNum)}
+                  className={
+                    pageNum === pagination.currentPage ? styles.active : ""
+                  }
+                >
+                  {pageNum}
+                </button>
+              );
+            }
+          )}
+
+          <button
+            onClick={() => loadUsers(pagination.currentPage + 1)}
+            disabled={!pagination.hasNext}
+          >
+            Siguiente
+          </button>
         </div>
       </div>
 

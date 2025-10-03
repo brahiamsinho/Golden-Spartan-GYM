@@ -68,10 +68,13 @@ class ApiService {
   }
 
   // Usuarios
-  async getUsers() {
-    const response = await fetch(`${API_BASE_URL}/usuarios/`, {
-      headers: this.getAuthHeaders(),
-    });
+  async getUsers(page = 1, pageSize = 10) {
+    const response = await fetch(
+      `${API_BASE_URL}/usuarios/?page=${page}&page_size=${pageSize}`,
+      {
+        headers: this.getAuthHeaders(),
+      }
+    );
     return this.handleResponse(response);
   }
 
@@ -197,6 +200,66 @@ class ApiService {
   // Permisos de usuario
   async getUserPermissions() {
     const response = await fetch(`${API_BASE_URL}/permisos-usuario/`, {
+      headers: this.getAuthHeaders(),
+    });
+    return this.handleResponse(response);
+  }
+
+  // Dashboard
+  async getDashboardStats() {
+    const response = await fetch(`${API_BASE_URL}/dashboard/stats/`, {
+      headers: this.getAuthHeaders(),
+    });
+    return this.handleResponse(response);
+  }
+
+  async getRecentActivity(limit = 10) {
+    const response = await fetch(`${API_BASE_URL}/bitacora/?limit=${limit}`, {
+      headers: this.getAuthHeaders(),
+    });
+    return this.handleResponse(response);
+  }
+
+  // Toggle role status
+  async toggleRoleStatus(roleId: number) {
+    const response = await fetch(
+      `${API_BASE_URL}/roles/${roleId}/toggle_status/`,
+      {
+        method: "POST",
+        headers: this.getAuthHeaders(),
+      }
+    );
+    return this.handleResponse(response);
+  }
+
+  // Permisos
+  async createPermission(permissionData: {
+    nombre: string;
+    descripcion: string;
+  }) {
+    const response = await fetch(`${API_BASE_URL}/permisos/`, {
+      method: "POST",
+      headers: this.getAuthHeaders(),
+      body: JSON.stringify(permissionData),
+    });
+    return this.handleResponse(response);
+  }
+
+  async updatePermission(
+    permissionId: number,
+    permissionData: { nombre: string; descripcion: string }
+  ) {
+    const response = await fetch(`${API_BASE_URL}/permisos/${permissionId}/`, {
+      method: "PUT",
+      headers: this.getAuthHeaders(),
+      body: JSON.stringify(permissionData),
+    });
+    return this.handleResponse(response);
+  }
+
+  async deletePermission(permissionId: number) {
+    const response = await fetch(`${API_BASE_URL}/permisos/${permissionId}/`, {
+      method: "DELETE",
       headers: this.getAuthHeaders(),
     });
     return this.handleResponse(response);

@@ -82,9 +82,49 @@ export default function EditUserModal({
     }));
   };
 
+  const validateForm = () => {
+    const errors: string[] = [];
+
+    if (!formData.username.trim()) {
+      errors.push("El nombre de usuario es requerido");
+    } else if (formData.username.length < 3) {
+      errors.push("El nombre de usuario debe tener al menos 3 caracteres");
+    }
+
+    if (!formData.email.trim()) {
+      errors.push("El email es requerido");
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      errors.push("El email no tiene un formato válido");
+    }
+
+    if (!formData.first_name.trim()) {
+      errors.push("El nombre es requerido");
+    }
+
+    if (!formData.last_name.trim()) {
+      errors.push("El apellido es requerido");
+    }
+
+    if (formData.password && formData.password.length < 6) {
+      errors.push("La contraseña debe tener al menos 6 caracteres");
+    }
+
+    if (formData.rol === 0) {
+      errors.push("Debe seleccionar un rol");
+    }
+
+    return errors;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
+
+    const validationErrors = validateForm();
+    if (validationErrors.length > 0) {
+      setError(validationErrors.join(", "));
+      return;
+    }
 
     setLoading(true);
     setError(null);
@@ -92,10 +132,10 @@ export default function EditUserModal({
     try {
       // Preparar datos para enviar (sin password si está vacío)
       const updateData: any = {
-        username: formData.username,
-        email: formData.email,
-        first_name: formData.first_name,
-        last_name: formData.last_name,
+        username: formData.username.trim(),
+        email: formData.email.trim(),
+        first_name: formData.first_name.trim(),
+        last_name: formData.last_name.trim(),
         rol: formData.rol,
         is_active: formData.is_active,
       };
@@ -108,8 +148,14 @@ export default function EditUserModal({
       await apiService.updateUser(user.id, updateData);
       onUserUpdated();
       onClose();
-    } catch (err) {
-      setError("Error al actualizar usuario");
+    } catch (err: any) {
+      if (err.message && err.message.includes("username")) {
+        setError("El nombre de usuario ya está en uso");
+      } else if (err.message && err.message.includes("email")) {
+        setError("El email ya está en uso");
+      } else {
+        setError("Error al actualizar usuario");
+      }
       console.error("Error updating user:", err);
     } finally {
       setLoading(false);

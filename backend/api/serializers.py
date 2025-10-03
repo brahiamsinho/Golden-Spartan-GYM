@@ -6,8 +6,17 @@ from .models import Rol, Permiso, RolPermiso, UsuarioRol, Bitacora
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ["id", "username", "email", "first_name", "last_name", "is_active"]
-        read_only_fields = ["id"]
+        fields = [
+            "id",
+            "username",
+            "email",
+            "first_name",
+            "last_name",
+            "is_active",
+            "date_joined",
+            "last_login",
+        ]
+        read_only_fields = ["id", "date_joined", "last_login"]
 
 
 class PermisoSerializer(serializers.ModelSerializer):
@@ -26,6 +35,8 @@ class RolSerializer(serializers.ModelSerializer):
             "id",
             "nombre",
             "descripcion",
+            "activo",
+            "fecha_creacion",
             "permisos",
             "usuarios_count",
         ]
@@ -105,6 +116,8 @@ class UserWithRolesSerializer(serializers.ModelSerializer):
             "first_name",
             "last_name",
             "is_active",
+            "date_joined",
+            "last_login",
             "roles",
         ]
 
