@@ -145,7 +145,7 @@ export default function EditUserModal({
         updateData.password = formData.password;
       }
 
-      await apiService.updateUser(user.id, updateData);
+      await apiService.updateUser(user.id.toString(), updateData);
       onUserUpdated();
       onClose();
     } catch (err: any) {

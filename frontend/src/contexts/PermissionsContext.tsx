@@ -1,12 +1,6 @@
 import { createContext, useContext, useState, useEffect } from "react";
 import type { ReactNode } from "react";
 
-interface Permission {
-  id: string;
-  name: string;
-  description: string;
-  module: string;
-}
 
 interface Role {
   id: string;

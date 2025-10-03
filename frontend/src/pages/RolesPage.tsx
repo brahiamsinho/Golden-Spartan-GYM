@@ -4,13 +4,13 @@ import {
   Edit,
   Trash2,
   Plus,
-  Check,
   X,
   Users,
   Lock,
   Search,
   Calendar,
   Activity,
+  AlertTriangle,
 } from "lucide-react";
 import styles from "./RolesPage.module.css";
 import apiService from "../services/api";
@@ -124,7 +124,7 @@ export default function RolesPage() {
     if (!selectedRole || !newRole.nombre.trim()) return;
 
     try {
-      await apiService.updateRole(selectedRole.id, {
+      await apiService.updateRole(selectedRole.id.toString(), {
         nombre: newRole.nombre,
         descripcion: newRole.descripcion,
         permisos: newRole.permisos,
@@ -149,7 +149,7 @@ export default function RolesPage() {
     }
 
     try {
-      await apiService.deleteRole(selectedRole.id);
+      await apiService.deleteRole(selectedRole.id.toString());
       await loadRoles();
       setShowDeleteModal(false);
       setSelectedRole(null);
@@ -159,15 +159,6 @@ export default function RolesPage() {
     }
   };
 
-  const toggleRoleStatus = async (roleId: number) => {
-    try {
-      await apiService.toggleRoleStatus(roleId);
-      await loadRoles();
-    } catch (err) {
-      setError("Error al cambiar estado del rol");
-      console.error("Error toggling role status:", err);
-    }
-  };
 
   const openEditModal = (role: Role) => {
     setSelectedRole(role);
@@ -193,10 +184,6 @@ export default function RolesPage() {
     }));
   };
 
-  const getPermissionName = (permissionId: number) => {
-    const permission = permissions.find((p) => p.id === permissionId);
-    return permission ? permission.nombre : `Permiso ${permissionId}`;
-  };
 
   if (loading) {
     return (
@@ -564,7 +551,9 @@ export default function RolesPage() {
 
             <div className={styles.modalBody}>
               <div className={styles.deleteWarning}>
-                <div className={styles.warningIcon}>⚠️</div>
+                <div className={styles.warningIcon}>
+                  <AlertTriangle size={24} />
+                </div>
                 <div>
                   <p>
                     ¿Estás seguro de que quieres eliminar el rol{" "}

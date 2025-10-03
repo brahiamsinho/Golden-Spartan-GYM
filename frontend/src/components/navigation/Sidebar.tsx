@@ -136,7 +136,7 @@ export default function Sidebar({
           )}
         </button>
         {(!isCollapsed || isMobile) && (
-          <h2 className={styles.title}>Golden Spartan GYM</h2>
+          <h2 className={styles.title}>Golden Spartan </h2>
         )}
       </div>
 

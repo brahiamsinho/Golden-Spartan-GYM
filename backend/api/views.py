@@ -1,4 +1,3 @@
-from django.shortcuts import render
 from rest_framework import viewsets, status, permissions
 from rest_framework.decorators import api_view, permission_classes, action
 from rest_framework.permissions import IsAuthenticated
@@ -15,7 +14,6 @@ from .serializers import (
     UserWithRolesSerializer,
     UserCreateSerializer,
 )
-from django.db.models import Q
 from django.utils import timezone
 
 
@@ -93,7 +91,7 @@ class UserViewSet(viewsets.ModelViewSet):
 
         try:
             page_obj = paginator.page(page)
-        except:
+        except Exception:
             page_obj = paginator.page(1)
 
         serializer = self.get_serializer(page_obj.object_list, many=True)
@@ -821,5 +819,70 @@ def dashboard_stats(request):
     except Exception as e:
         return Response(
             {"error": f"Error al obtener estadísticas: {str(e)}"},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+
+@api_view(["POST"])
+@permission_classes([])  # No requiere autenticación
+def forgot_password(request):
+    """
+    Endpoint para solicitar restablecimiento de contraseña.
+    Simula el envío de email (en un entorno real enviaría un email).
+    """
+    try:
+        email = request.data.get("email")
+
+        if not email:
+            return Response(
+                {"message": "El email es requerido"}, status=status.HTTP_400_BAD_REQUEST
+            )
+
+        # Buscar usuario por email
+        try:
+            user = User.objects.get(email=email)
+
+            # Registrar en bitácora usando el nuevo sistema
+            Bitacora.log_activity(
+                usuario=user,
+                tipo_accion="forgot_password",
+                accion="Solicitud de restablecimiento de contraseña",
+                descripcion=f"Solicitud para email: {email}",
+                nivel="info",
+                ip_address=get_client_ip(request),
+                user_agent=request.META.get("HTTP_USER_AGENT", ""),
+                datos_adicionales={"email": email},
+            )
+
+            # En un entorno real, aquí se enviaría un email con un token
+            # Por ahora solo simulamos el éxito
+            return Response(
+                {"message": "Se han enviado las instrucciones a tu email"},
+                status=status.HTTP_200_OK,
+            )
+
+        except User.DoesNotExist:
+            # Por seguridad, no revelamos si el email existe o no
+            # Pero registramos el intento en bitácora
+            Bitacora.log_activity(
+                usuario=None,
+                tipo_accion="forgot_password_failed",
+                accion="Intento de restablecimiento con email inexistente",
+                descripcion=f"Email consultado: {email}",
+                nivel="warning",
+                ip_address=get_client_ip(request),
+                user_agent=request.META.get("HTTP_USER_AGENT", ""),
+                datos_adicionales={"email": email},
+            )
+
+            # Respondemos como si hubiera éxito para no revelar información
+            return Response(
+                {"message": "Se han enviado las instrucciones a tu email"},
+                status=status.HTTP_200_OK,
+            )
+
+    except Exception:
+        return Response(
+            {"message": "Error interno del servidor"},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )

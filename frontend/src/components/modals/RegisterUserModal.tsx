@@ -8,7 +8,7 @@ interface UserFormData {
   email: string;
   password: string;
   confirmPassword: string;
-  role: string;
+  role: "administrador" | "entrenador";
   firstName: string;
   lastName: string;
   phone: string;
@@ -36,7 +36,7 @@ export default function RegisterUserModal({
     email: "",
     password: "",
     confirmPassword: "",
-    role: "",
+    role: "administrador" as "administrador" | "entrenador",
     firstName: "",
     lastName: "",
     phone: "",

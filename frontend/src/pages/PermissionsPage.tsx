@@ -15,12 +15,8 @@ import {
   Trash2,
   Activity,
   Key,
-  UserCheck,
-  UserX,
-  ShieldCheck,
-  ShieldX,
-  FileText,
   Download,
+  X,
 } from "lucide-react";
 import apiService from "../services/api";
 import styles from "./PermissionsPage.module.css";
@@ -29,13 +25,6 @@ interface Permission {
   id: number;
   nombre: string;
   descripcion: string;
-}
-
-interface Module {
-  name: string;
-  icon: any;
-  color: string;
-  permissions: Permission[];
 }
 
 const MODULE_ICONS = {

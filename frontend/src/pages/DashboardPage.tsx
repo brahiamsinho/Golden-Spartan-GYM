@@ -1,17 +1,8 @@
 import { useState, useEffect } from "react";
-import { Activity, Clock, User, Shield, Eye } from "lucide-react";
+import { Activity, Clock, User, Shield } from "lucide-react";
 import apiService from "../services/api";
 import styles from "./DashboardPage.module.css";
 
-interface UserActivity {
-  id: number;
-  username: string;
-  action: string;
-  timestamp: string;
-  ip: string;
-  status: "success" | "warning" | "error";
-  details?: string;
-}
 
 interface DashboardStats {
   usuarios_activos_hoy: number;
@@ -123,51 +114,6 @@ export default function DashboardPage() {
       ]
     : [];
 
-  const getStatusColor = (nivel: string) => {
-    switch (nivel.toLowerCase()) {
-      case "info":
-        return "#10b981";
-      case "warning":
-        return "#f59e0b";
-      case "error":
-        return "#ef4444";
-      case "critical":
-        return "#dc2626";
-      default:
-        return "#6b7280";
-    }
-  };
-
-  const getStatusText = (nivel: string) => {
-    switch (nivel.toLowerCase()) {
-      case "info":
-        return "Exitoso";
-      case "warning":
-        return "Advertencia";
-      case "error":
-        return "Error";
-      case "critical":
-        return "Crítico";
-      default:
-        return nivel;
-    }
-  };
-
-  const getActionIcon = (tipoAccion: string) => {
-    switch (tipoAccion.toLowerCase()) {
-      case "login":
-      case "logout":
-        return User;
-      case "create_user":
-      case "update_user":
-        return User;
-      case "create_role":
-      case "update_role":
-        return Shield;
-      default:
-        return Activity;
-    }
-  };
 
   return (
     <div className={styles.dashboard}>

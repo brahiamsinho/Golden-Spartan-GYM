@@ -4,10 +4,6 @@ import { PermissionsProvider } from "../../contexts/PermissionsContext";
 import Sidebar from "../navigation/Sidebar";
 import Header from "../header/Header";
 import DashboardPage from "../../pages/DashboardPage";
-import UsersPage from "../../pages/UsersPage";
-import RolesPage from "../../pages/RolesPage";
-import PermissionsPage from "../../pages/PermissionsPage";
-import ActivityLogPage from "../../pages/ActivityLogPage";
 import LogoutModal from "../modals/LogoutModal";
 import LogoutSuccessModal from "../modals/LogoutSuccessModal";
 import styles from "./dashboard.module.css";
@@ -15,7 +11,6 @@ import { Menu } from "lucide-react";
 
 export default function Dashboard() {
   const { user, logout } = useAuth();
-  const [currentPage, setCurrentPage] = useState("dashboard");
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
@@ -48,9 +43,6 @@ export default function Dashboard() {
     setShowLogoutModal(true);
   };
 
-  const toggleMobileSidebar = () => {
-    setIsMobileSidebarOpen(!isMobileSidebarOpen);
-  };
 
   // Close sidebar when clicking on overlay
   const handleMainClick = () => {
@@ -78,20 +70,7 @@ export default function Dashboard() {
   };
 
   const renderCurrentPage = () => {
-    switch (currentPage) {
-      case "dashboard":
-        return <DashboardPage />;
-      case "users":
-        return <UsersPage />;
-      case "roles":
-        return <RolesPage />;
-      case "permissions":
-        return <PermissionsPage />;
-      case "activity-log":
-        return <ActivityLogPage />;
-      default:
-        return <DashboardPage />;
-    }
+    return <DashboardPage />;
   };
 
   return (
@@ -102,8 +81,6 @@ export default function Dashboard() {
         } ${isSidebarCollapsed ? styles.sidebarCollapsed : ""}`}
       >
         <Sidebar
-          currentPage={currentPage}
-          onPageChange={setCurrentPage}
           onLogout={handleLogout}
           isMobileOpen={isMobileSidebarOpen}
           onMobileClose={() => setIsMobileSidebarOpen(false)}
