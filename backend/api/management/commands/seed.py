@@ -1,7 +1,10 @@
 from django.core.management.base import BaseCommand
 from django.db import transaction
 from django.core.management import call_command
-from seeders import UserSeeder, MemberSeeder, PlanSeeder
+from seeders.user_seeder import UserSeeder
+from seeders.member_seeder import MemberSeeder
+from seeders.plan_seeder import PlanSeeder
+from seeders.rol_permiso_seeder import RolPermisoSeeder  # Añadir esta línea
 import logging
 
 logger = logging.getLogger(__name__)
@@ -42,6 +45,7 @@ class Command(BaseCommand):
             UserSeeder(self),
             MemberSeeder(self),
             PlanSeeder(self),
+            RolPermisoSeeder(self),  # Añadir esta línea
             # Aquí puedes agregar más seeders cuando los crees
         ]
 

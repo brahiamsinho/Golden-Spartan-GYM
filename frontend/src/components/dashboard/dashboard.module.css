@@ -2,6 +2,11 @@
   display: flex;
   height: 100vh;
   background: #0f172a;
+  position: relative;
+}
+
+.container.sidebarCollapsed .main {
+  margin-left: 80px;
 }
 
 .main {
@@ -9,6 +14,7 @@
   margin-left: 280px;
   overflow-y: auto;
   background: #0f172a;
+  transition: margin-left 0.3s ease;
 }
 
 .content {
@@ -95,6 +101,11 @@
   .container.sidebarOpen .main {
     transform: translateX(280px);
     /* Match sidebar width */
+  }
+
+  /* Reset desktop collapse behavior on mobile */
+  .container.sidebarCollapsed .main {
+    margin-left: 0;
   }
 
   .mobileHeader {
