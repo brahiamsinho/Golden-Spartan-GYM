@@ -9,6 +9,7 @@ interface User {
   last_name?: string;
   roles?: { id: number; nombre: string }[];
   permisos?: string[];
+  is_superuser?: boolean;
 }
 
 interface AuthContextType {

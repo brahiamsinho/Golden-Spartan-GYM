@@ -708,7 +708,62 @@ def get_user_info(request):
     """Obtener información del usuario actualmente autenticado"""
     try:
         user = request.user
-        # Obtener roles del usuario
+        
+        # Verificar si es superusuario
+        if user.is_superuser:
+            # Los superusuarios tienen acceso completo a todo
+            all_permissions = [
+                "Ver Dashboard",
+                "Ver Usuarios", 
+                "Crear Usuario",
+                "Editar Usuario",
+                "Eliminar Usuario",
+                "Ver Roles",
+                "Crear Rol", 
+                "Editar Rol",
+                "Eliminar Rol",
+                "Ver Permisos",
+                "Crear Permiso",
+                "Editar Permiso", 
+                "Eliminar Permiso",
+                "Asignar Permisos",
+                "Ver Bitácora",
+                "Gestionar Administradores",
+                "Gestionar Instructores"
+            ]
+            
+            roles = [{"id": 1, "nombre": "Super Administrador"}]
+            
+            # Registrar inicio de sesión en bitácora
+            Bitacora.log_activity(
+                usuario=user,
+                tipo_accion="login",
+                accion="Inicio de sesión exitoso (Superusuario)",
+                descripcion=f"Superusuario {user.username} inició sesión",
+                nivel="info",
+                ip_address=get_client_ip(request),
+                user_agent=request.META.get("HTTP_USER_AGENT", ""),
+                datos_adicionales={
+                    "is_superuser": True,
+                    "roles": ["Super Administrador"],
+                    "permisos_count": len(all_permissions),
+                },
+            )
+            
+            return Response(
+                {
+                    "id": user.id,
+                    "username": user.username,
+                    "email": user.email,
+                    "first_name": user.first_name,
+                    "last_name": user.last_name,
+                    "roles": roles,
+                    "permisos": all_permissions,
+                    "is_superuser": True,
+                }
+            )
+        
+        # Para usuarios normales, obtener roles de la tabla UsuarioRol
         usuario_roles = UsuarioRol.objects.filter(usuario=user)
         roles = [{"id": ur.rol.id, "nombre": ur.rol.nombre} for ur in usuario_roles]
 
@@ -743,6 +798,7 @@ def get_user_info(request):
                 "last_name": user.last_name,
                 "roles": roles,
                 "permisos": list(permisos),
+                "is_superuser": False,
             }
         )
     except Exception as e:

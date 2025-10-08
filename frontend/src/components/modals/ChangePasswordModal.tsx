@@ -61,7 +61,7 @@ export default function ChangePasswordModal({
     }
 
     try {
-      const token = localStorage.getItem("access_token");
+      const token = localStorage.getItem("accessToken");
       if (!token) {
         setError(
           "No se encontró el token de autenticación. Por favor, inicia sesión nuevamente."
