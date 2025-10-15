@@ -25,7 +25,23 @@ class ApiService {
       }
       throw new Error(`HTTP error! status: ${response.status}`);
     }
-    return response.json();
+
+    // Para respuestas 204 (No Content) o respuestas vacías, no intentar parsear JSON
+    if (
+      response.status === 204 ||
+      response.headers.get("content-length") === "0"
+    ) {
+      return null;
+    }
+
+    // Verificar si la respuesta tiene contenido JSON
+    const contentType = response.headers.get("content-type");
+    if (contentType && contentType.includes("application/json")) {
+      return response.json();
+    }
+
+    // Si no es JSON, devolver el texto
+    return response.text();
   }
 
   private async refreshToken(): Promise<boolean> {
@@ -339,6 +355,66 @@ class ApiService {
       method: "PUT",
       headers: this.getAuthHeaders(),
       body: JSON.stringify(profileData),
+    });
+    return this.handleResponse(response);
+  }
+
+  // Clientes
+  async getClientes() {
+    const response = await fetch(`${API_BASE_URL}/clientes/`, {
+      method: "GET",
+      headers: this.getAuthHeaders(),
+    });
+    return this.handleResponse(response);
+  }
+
+  async getCliente(clienteId: string) {
+    const response = await fetch(`${API_BASE_URL}/clientes/${clienteId}/`, {
+      method: "GET",
+      headers: this.getAuthHeaders(),
+    });
+    return this.handleResponse(response);
+  }
+
+  async createCliente(clienteData: {
+    nombre: string;
+    apellido: string;
+    telefono: string;
+    peso?: number;
+    altura?: number;
+    experiencia: "principiante" | "intermedio" | "avanzado" | "experto";
+  }) {
+    const response = await fetch(`${API_BASE_URL}/clientes/`, {
+      method: "POST",
+      headers: this.getAuthHeaders(),
+      body: JSON.stringify(clienteData),
+    });
+    return this.handleResponse(response);
+  }
+
+  async updateCliente(
+    clienteId: string,
+    clienteData: {
+      nombre: string;
+      apellido: string;
+      telefono: string;
+      peso?: number;
+      altura?: number;
+      experiencia: "principiante" | "intermedio" | "avanzado" | "experto";
+    }
+  ) {
+    const response = await fetch(`${API_BASE_URL}/clientes/${clienteId}/`, {
+      method: "PUT",
+      headers: this.getAuthHeaders(),
+      body: JSON.stringify(clienteData),
+    });
+    return this.handleResponse(response);
+  }
+
+  async deleteCliente(clienteId: string) {
+    const response = await fetch(`${API_BASE_URL}/clientes/${clienteId}/`, {
+      method: "DELETE",
+      headers: this.getAuthHeaders(),
     });
     return this.handleResponse(response);
   }

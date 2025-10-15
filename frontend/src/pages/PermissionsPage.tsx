@@ -315,13 +315,13 @@ export default function PermissionsPage() {
           <p>Gestiona los permisos disponibles en el sistema</p>
         </div>
         <div className={styles.headerActions}>
-          <button
-            onClick={() => setShowCreateModal(true)}
-            className={styles.createButton}
-          >
+        <button
+          onClick={() => setShowCreateModal(true)}
+          className={styles.createButton}
+        >
             <Plus size={20} />
-            Nuevo Permiso
-          </button>
+          Nuevo Permiso
+        </button>
           <button onClick={loadPermissions} className={styles.refreshButton}>
             <RefreshCw size={20} />
             Actualizar
@@ -330,35 +330,35 @@ export default function PermissionsPage() {
       </div>
 
       <div className={styles.filters}>
-        <div className={styles.searchBox}>
+          <div className={styles.searchBox}>
           <Search size={20} />
-          <input
-            type="text"
-            placeholder="Buscar permisos..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
+            <input
+              type="text"
+              placeholder="Buscar permisos..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
         </div>
-
-        <select
-          value={selectedModule}
-          onChange={(e) => setSelectedModule(e.target.value)}
-          className={styles.filterSelect}
-        >
-          <option value="all">Todos los módulos</option>
+        
+            <select
+              value={selectedModule}
+              onChange={(e) => setSelectedModule(e.target.value)}
+              className={styles.filterSelect}
+            >
+              <option value="all">Todos los módulos</option>
           {modules.map((module) => (
             <option key={module.name} value={module.name}>
               {module.name.charAt(0).toUpperCase() + module.name.slice(1)}
             </option>
-          ))}
-        </select>
+              ))}
+            </select>
 
         <button className={styles.filterButton}>
           <Filter size={20} />
           Filtros
         </button>
-      </div>
-
+          </div>
+          
       <div className={styles.stats}>
         <div className={styles.statCard}>
           <div
@@ -406,12 +406,12 @@ export default function PermissionsPage() {
           return (
             <div key={module.name} className={styles.permissionCard}>
               <div className={styles.permissionHeader}>
-                <div
-                  className={styles.moduleIcon}
+                  <div 
+                    className={styles.moduleIcon}
                   style={{ backgroundColor: module.color }}
-                >
+                  >
                   <Icon size={24} />
-                </div>
+                  </div>
                 <div className={styles.moduleInfo}>
                   <h3 className={styles.moduleName}>
                     {module.name.charAt(0).toUpperCase() + module.name.slice(1)}
@@ -446,8 +446,8 @@ export default function PermissionsPage() {
                           {permission.descripcion}
                         </p>
                       </div>
-                      <div className={styles.permissionActions}>
-                        <button
+                        <div className={styles.permissionActions}>
+                          <button
                           onClick={(e) => {
                             e.preventDefault();
                             e.stopPropagation();
@@ -470,8 +470,8 @@ export default function PermissionsPage() {
                             e.preventDefault();
                             e.stopPropagation();
                           }}
-                          className={styles.actionButton}
-                          title="Editar permiso"
+                            className={styles.actionButton}
+                            title="Editar permiso"
                           style={{
                             pointerEvents: "auto",
                             cursor: "pointer",
@@ -480,8 +480,8 @@ export default function PermissionsPage() {
                           }}
                         >
                           <Edit size={16} />
-                        </button>
-                        <button
+                          </button>
+                          <button
                           onClick={(e) => {
                             e.preventDefault();
                             e.stopPropagation();
@@ -505,7 +505,7 @@ export default function PermissionsPage() {
                             e.stopPropagation();
                           }}
                           className={`${styles.actionButton} ${styles.deleteButton}`}
-                          title="Eliminar permiso"
+                            title="Eliminar permiso"
                           style={{
                             pointerEvents: "auto",
                             cursor: "pointer",
@@ -514,13 +514,13 @@ export default function PermissionsPage() {
                           }}
                         >
                           <Trash2 size={16} />
-                        </button>
-                      </div>
+                          </button>
+                        </div>
                     </div>
                   );
                 })}
-              </div>
-            </div>
+                      </div>
+                    </div>
           );
         })}
       </div>
@@ -651,7 +651,7 @@ export default function PermissionsPage() {
               >
                 Cancelar
               </button>
-              <button
+              <button 
                 onClick={handleEditPermission}
                 className={styles.saveButton}
                 disabled={loading}

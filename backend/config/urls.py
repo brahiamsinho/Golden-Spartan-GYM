@@ -25,6 +25,7 @@ from api.views import (
     RolPermisoViewSet,
     UsuarioRolViewSet,
     BitacoraViewSet,
+    ClienteViewSet,
     get_user_permissions,
     registrar_bitacora,
     get_user_info,
@@ -34,13 +35,6 @@ from api.views import (
     forgot_password,
     reset_password,
     user_profile,
-    # Nuevas vistas para clientes y membresías
-    ClienteViewSet,
-    PlanMembresiaViewSet,
-    PromocionViewSet,
-    InscripcionMembresiaViewSet,
-    MembresiaViewSet,
-    MembresiaPromocionViewSet,
 )
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
@@ -51,14 +45,8 @@ router.register(r"permisos", PermisoViewSet)
 router.register(r"roles-permisos", RolPermisoViewSet)
 router.register(r"usuarios-roles", UsuarioRolViewSet)
 router.register(r"bitacora", BitacoraViewSet)
-
-# Rutas para clientes y membresías
 router.register(r"clientes", ClienteViewSet)
-router.register(r"planes-membresia", PlanMembresiaViewSet)
-router.register(r"promociones", PromocionViewSet)
-router.register(r"inscripciones-membresia", InscripcionMembresiaViewSet)
-router.register(r"membresias", MembresiaViewSet)
-router.register(r"membresias-promociones", MembresiaPromocionViewSet)
+
 
 urlpatterns = [
     path("admin/", admin.site.urls),

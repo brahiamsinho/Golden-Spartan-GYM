@@ -13,7 +13,6 @@ import PermissionsPage from "../../pages/PermissionsPage";
 import ActivityLogPage from "../../pages/ActivityLogPage";
 import ProfilePage from "../../pages/ProfilePage";
 import ClientesPage from "../../pages/ClientesPage";
-import PlanesPage from "../../pages/PlanesPage";
 import LogoutModal from "../modals/LogoutModal";
 import LogoutSuccessModal from "../modals/LogoutSuccessModal";
 import ProtectedRoute from "./ProtectedRoute";
@@ -160,18 +159,7 @@ function DashboardContent({
                 </ProtectedRoute>
               }
             />
-            <Route
-              path={ROUTES.PLANES}
-              element={
-                <ProtectedRoute requiredPermission="ver_plan">
-                  <PlanesPage />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path={ROUTES.PROFILE}
-              element={<ProfilePage />}
-            />
+            <Route path={ROUTES.PROFILE} element={<ProfilePage />} />
             <Route
               path="*"
               element={<Navigate to={ROUTES.DASHBOARD} replace />}

@@ -1,379 +1,335 @@
 .container {
-  padding: 2rem;
-  max-width: 1200px;
-  margin: 0 auto;
-  background-color: var(--bg-color, #f8f9fa);
-  min-height: 100vh;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+    background-color: #f8fafc;
+    min-height: 100vh;
 }
 
 .header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 2rem;
-}
-
-.header h1 {
-  color: var(--primary-color, #1a1a1a);
-  font-size: 2rem;
-  font-weight: 600;
-  margin: 0;
-}
-
-.editButton {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  background: var(--primary-color, #007bff);
-  color: white;
-  border: none;
-  border-radius: 8px;
-  padding: 0.75rem 1.5rem;
-  font-size: 0.9rem;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.editButton:hover {
-  background: var(--primary-hover, #0056b3);
-  transform: translateY(-1px);
-}
-
-.loading {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 4rem;
-  color: var(--text-color, #ae5555);
-}
-
-.spinner {
-  width: 40px;
-  height: 40px;
-  border: 4px solid #f3f3f3;
-  border-top: 4px solid var(--primary-color, #007bff);
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
-  margin-bottom: 1rem;
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
-}
-
-.error {
-  background: #fee;
-  color: #c33;
-  padding: 1rem;
-  border-radius: 8px;
-  text-align: center;
-  border: 1px solid #fcc;
-}
-
-.message {
-  padding: 1rem;
-  border-radius: 8px;
-  margin-bottom: 1.5rem;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.message.success {
-  background: #d4edda;
-  color: #155724;
-  border: 1px solid #c3e6cb;
-}
-
-.message.error {
-  background: #f8d7da;
-  color: #721c24;
-  border: 1px solid #f5c6cb;
-}
-
-.profileCard {
-  background: white;
-  border-radius: 12px;
-  overflow: hidden;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
-
-.profileHeader {
-  background: linear-gradient(135deg, var(--primary-color, #007bff), var(--primary-hover, #0056b3));
-  color: white;
-  padding: 2rem;
-  display: flex;
-  align-items: center;
-  gap: 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    background: white;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    margin-bottom: 30px;
 }
 
 .avatar {
-  width: 80px;
-  height: 80px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.2);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 2rem;
+    width: 80px;
+    height: 80px;
+    background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    flex-shrink: 0;
 }
 
-.userInfo h2 {
-  margin: 0;
-  font-size: 1.5rem;
-  font-weight: 600;
+.userInfo {
+    flex: 1;
 }
 
-.status {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  margin: 0.5rem 0 0 0;
-  opacity: 0.9;
+.name {
+    font-size: 28px;
+    font-weight: 700;
+    color: #1f2937;
+    margin: 0 0 8px 0;
 }
 
-.statusDot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-}
-
-.statusDot.active {
-  background: #28a745;
-}
-
-.statusDot.inactive {
-  background: #dc3545;
-}
-
-.profileContent {
-  padding: 2rem;
-}
-
-.section {
-  margin-bottom: 2rem;
-}
-
-.section:last-child {
-  margin-bottom: 0;
-}
-
-.section h3 {
-  color: var(--primary-color, #007bff);
-  font-size: 1.2rem;
-  font-weight: 600;
-  margin: 0 0 1.5rem 0;
-  padding-bottom: 0.5rem;
-  border-bottom: 2px solid var(--border-color, #e9ecef);
-}
-
-.fieldGroup {
-  display: grid;
-  gap: 1.5rem;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-}
-
-.field {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.field label {
-  font-weight: 600;
-  color: var(--text-color, #fcfbfb);
-  font-size: 0.9rem;
-}
-
-.fieldValue {
-  padding: 0.75rem;
-  background: var(--bg-light, #f8f9fa);
-  border-radius: 6px;
-  border: 1px solid var(--border-color, #e9ecef);
-  color: var(--text-color, #333);
-}
-
-.readOnlyField {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0.75rem;
-  background: var(--bg-light, #f8f9fa);
-  border-radius: 6px;
-  border: 1px solid var(--border-color, #e9ecef);
-  color: var(--text-color, #333);
-}
-
-.readOnlyNote {
-  font-size: 0.8rem;
-  color: var(--text-muted, #666);
-  font-style: italic;
-}
-
-.input {
-  padding: 0.75rem;
-  border: 2px solid var(--border-color, #e9ecef);
-  border-radius: 6px;
-  font-size: 0.9rem;
-  transition: border-color 0.2s ease;
-}
-
-.input:focus {
-  outline: none;
-  border-color: var(--primary-color, #007bff);
-  box-shadow: 0 0 0 3px rgba(0, 123, 255, 0.1);
-}
-
-.rolesContainer {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-}
-
-.roleTag {
-  background: var(--primary-color, #007bff);
-  color: white;
-  padding: 0.25rem 0.75rem;
-  border-radius: 20px;
-  font-size: 0.8rem;
-  font-weight: 500;
-}
-
-.noRoles {
-  color: var(--text-muted, #666);
-  font-style: italic;
+.role {
+    font-size: 16px;
+    color: #6b7280;
+    margin: 0;
 }
 
 .actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 1rem;
-  margin-top: 2rem;
-  padding-top: 2rem;
-  border-top: 1px solid var(--border-color, #e9ecef);
+    display: flex;
+    gap: 12px;
+}
+
+.editButton {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 20px;
+    background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.editButton:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+}
+
+.editActions {
+    display: flex;
+    gap: 12px;
 }
 
 .saveButton {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  background: var(--success-color, #28a745);
-  color: white;
-  border: none;
-  border-radius: 8px;
-  padding: 0.75rem 1.5rem;
-  font-size: 0.9rem;
-  cursor: pointer;
-  transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 20px;
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
 }
 
-.saveButton:hover:not(:disabled) {
-  background: var(--success-hover, #218838);
-  transform: translateY(-1px);
-}
-
-.saveButton:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  transform: none;
+.saveButton:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
 }
 
 .cancelButton {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  background: var(--secondary-color, #6c757d);
-  color: white;
-  border: none;
-  border-radius: 8px;
-  padding: 0.75rem 1.5rem;
-  font-size: 0.9rem;
-  cursor: pointer;
-  transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 20px;
+    background: #ef4444;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
 }
 
-.cancelButton:hover:not(:disabled) {
-  background: var(--secondary-hover, #5a6268);
-  transform: translateY(-1px);
+.cancelButton:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.4);
 }
 
-.cancelButton:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-  transform: none;
+.content {
+    display: flex;
+    flex-direction: column;
+    gap: 30px;
 }
 
-.buttonSpinner {
-  width: 16px;
-  height: 16px;
-  border: 2px solid transparent;
-  border-top: 2px solid currentColor;
-  border-radius: 50%;
-  animation: spin 1s linear infinite;
+.section {
+    background: white;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.sectionTitle {
+    font-size: 20px;
+    font-weight: 700;
+    color: #1f2937;
+    margin: 0 0 20px 0;
+    padding-bottom: 12px;
+    border-bottom: 2px solid #e5e7eb;
+}
+
+.formGrid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+}
+
+.formGroup {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.label {
+    font-weight: 600;
+    color: #374151;
+    font-size: 14px;
+}
+
+.input {
+    padding: 12px 16px;
+    border: 2px solid #e5e7eb;
+    border-radius: 8px;
+    font-size: 16px;
+    transition: all 0.2s ease;
+    background: #f9fafb;
+}
+
+.input:focus {
+    outline: none;
+    border-color: #3b82f6;
+    background: white;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.value {
+    padding: 12px 16px;
+    background: #f9fafb;
+    border-radius: 8px;
+    color: #374151;
+    margin: 0;
+    font-size: 16px;
+}
+
+.passwordInput {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.togglePassword {
+    position: absolute;
+    right: 12px;
+    background: none;
+    border: none;
+    color: #6b7280;
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 4px;
+    transition: color 0.2s ease;
+}
+
+.togglePassword:hover {
+    color: #374151;
+}
+
+.roleInfo {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.roleItem {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px;
+    background: #f9fafb;
+    border-radius: 8px;
+    border-left: 4px solid #3b82f6;
+}
+
+.roleLabel {
+    font-weight: 600;
+    color: #374151;
+    min-width: 120px;
+}
+
+.roleValue {
+    color: #6b7280;
+    flex: 1;
+}
+
+.permissionsList {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 12px;
+}
+
+.permissionItem {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px;
+    background: #f0f9ff;
+    border: 1px solid #bae6fd;
+    border-radius: 8px;
+    transition: all 0.2s ease;
+}
+
+.permissionItem:hover {
+    background: #e0f2fe;
+    border-color: #7dd3fc;
+}
+
+.permissionName {
+    font-weight: 600;
+    color: #0c4a6e;
+}
+
+.permissionCode {
+    font-size: 12px;
+    color: #0369a1;
+    background: #bae6fd;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-family: monospace;
+}
+
+.noPermissions {
+    text-align: center;
+    color: #6b7280;
+    font-style: italic;
+    padding: 40px;
+    background: #f9fafb;
+    border-radius: 8px;
+    border: 2px dashed #d1d5db;
+}
+
+.error {
+    text-align: center;
+    padding: 40px;
+    color: #ef4444;
+    background: #fef2f2;
+    border-radius: 8px;
+    border: 1px solid #fecaca;
 }
 
 /* Responsive Design */
 @media (max-width: 768px) {
-  .container {
-    padding: 1rem;
-  }
+    .container {
+        padding: 16px;
+    }
 
-  .header {
-    flex-direction: column;
-    gap: 1rem;
-    align-items: stretch;
-  }
+    .header {
+        flex-direction: column;
+        text-align: center;
+        gap: 16px;
+    }
 
-  .header h1 {
-    text-align: center;
-  }
+    .actions {
+        width: 100%;
+        justify-content: center;
+    }
 
-  .profileHeader {
-    flex-direction: column;
-    text-align: center;
-    padding: 1.5rem;
-  }
+    .editActions {
+        flex-direction: column;
+        width: 100%;
+    }
 
-  .fieldGroup {
-    grid-template-columns: 1fr;
-  }
+    .formGrid {
+        grid-template-columns: 1fr;
+    }
 
-  .actions {
-    flex-direction: column;
-  }
-
-  .readOnlyField {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 0.5rem;
-  }
+    .permissionsList {
+        grid-template-columns: 1fr;
+    }
 }
 
-/* Dark mode support */
-@media (prefers-color-scheme: dark) {
-  .container {
-    background-color: #1a1a1a;
-  }
+@media (max-width: 480px) {
+    .header {
+        padding: 20px;
+    }
 
-  .profileCard {
-    background: #2d2d2d;
-  }
+    .section {
+        padding: 20px;
+    }
 
-  .fieldValue, .readOnlyField {
-    background: #3a3a3a;
-    border-color: #555;
-    color: #e0e0e0;
-  }
+    .name {
+        font-size: 24px;
+    }
 
-  .input {
-    background: #3a3a3a;
-    border-color: #555;
-    color: #e0e0e0;
-  }
-
-  .section h3 {
-    color: #4dabf7;
-  }
+    .editButton,
+    .saveButton,
+    .cancelButton {
+        padding: 10px 16px;
+        font-size: 14px;
+    }
 }
