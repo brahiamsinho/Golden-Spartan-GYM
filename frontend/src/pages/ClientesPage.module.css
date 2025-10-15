@@ -1,0 +1,22 @@
+.clientesPage {
+  min-height: 100vh;
+  background-color: #1a1a2e;
+}
+
+.container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+}
+
+@media (min-width: 640px) {
+  .container {
+    padding: 2rem 1.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .container {
+    padding: 2rem 2rem;
+  }
+}

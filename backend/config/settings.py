@@ -137,6 +137,9 @@ AUTH_PASSWORD_VALIDATORS = [
     },
     {
         "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
+        "OPTIONS": {
+            "min_length": 8,
+        }
     },
     {
         "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
@@ -150,9 +153,12 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internationalization
 # https://docs.djangoproject.com/en/5.2/topics/i18n/
 
-LANGUAGE_CODE = "en-us"
+LANGUAGE_CODE = "es-es"  # Español de España
+# LANGUAGE_CODE = "es-mx"  # Español de México
+# LANGUAGE_CODE = "es-bo"  # Español de Bolivia
 
-TIME_ZONE = "UTC"
+TIME_ZONE = "America/La_Paz"  # Zona horaria de Bolivia
+# TIME_ZONE = "UTC"  # UTC si prefieres
 
 USE_I18N = True
 
@@ -210,3 +216,36 @@ REST_FRAMEWORK = {
         "rest_framework_simplejwt.authentication.JWTAuthentication",
     )
 }
+
+# Configuración de Email
+# Detectar si MailHog está disponible para desarrollo
+USE_MAILHOG = os.getenv('USE_MAILHOG', 'True') == 'True' and DEBUG
+
+if USE_MAILHOG:
+    # Configuración para MailHog (desarrollo)
+    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+    EMAIL_HOST = 'localhost'
+    EMAIL_PORT = 1025
+    EMAIL_USE_TLS = False
+    EMAIL_USE_SSL = False
+    EMAIL_HOST_USER = ''
+    EMAIL_HOST_PASSWORD = ''
+    print("📧 Usando MailHog para emails (puerto 1025)")
+    print("🌐 Interfaz web de MailHog: http://localhost:8025")
+else:
+    # Configuración para producción o testing
+    if DEBUG:
+        EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'  # Para testing - muestra en consola
+        print("📧 Usando console backend para emails")
+    else:
+        EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'  # Para producción
+        EMAIL_HOST = os.getenv('EMAIL_HOST', 'smtp.gmail.com')
+        EMAIL_PORT = int(os.getenv('EMAIL_PORT', '587'))
+        EMAIL_USE_TLS = os.getenv('EMAIL_USE_TLS', 'True') == 'True'
+        EMAIL_HOST_USER = os.getenv('EMAIL_HOST_USER', 'test@goldenspartan.com')
+        EMAIL_HOST_PASSWORD = os.getenv('EMAIL_HOST_PASSWORD', 'test_password')
+
+DEFAULT_FROM_EMAIL = os.getenv('DEFAULT_FROM_EMAIL', 'Golden Spartan Gym <noreply@goldenspartan.com>')
+
+# URL base para enlaces de recuperación
+FRONTEND_URL = os.getenv('FRONTEND_URL', 'http://localhost:5173')

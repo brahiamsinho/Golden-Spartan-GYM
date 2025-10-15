@@ -3,7 +3,15 @@ from rest_framework.decorators import api_view, permission_classes, action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from django.contrib.auth.models import User
-from .models import Rol, Permiso, RolPermiso, UsuarioRol, Bitacora
+from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError
+from django.utils import timezone
+from .models import (
+    Rol, Permiso, RolPermiso, UsuarioRol, Bitacora, PasswordResetToken,
+    Cliente, PlanMembresia, Promocion, InscripcionMembresia, 
+    Membresia, MembresiaPromocion
+)
+from .email_service import EmailService
 from .serializers import (
     UserSerializer,
     RolSerializer,
@@ -13,6 +21,13 @@ from .serializers import (
     BitacoraSerializer,
     UserWithRolesSerializer,
     UserCreateSerializer,
+    ClienteSerializer,
+    ClienteDetailSerializer,
+    PlanMembresiaSerializer,
+    PromocionSerializer,
+    InscripcionMembresiaSerializer,
+    MembresiaSerializer,
+    MembresiaPromocionSerializer,
 )
 from django.utils import timezone
 
@@ -60,21 +75,17 @@ class UserViewSet(viewsets.ModelViewSet):
         return UserSerializer
 
     def get_permissions(self):
+        # Si es superusuario, permitir todas las acciones sin restricciones adicionales
+        if hasattr(self.request, 'user') and self.request.user.is_superuser:
+            return [IsAuthenticated()]
+            
+        # Para usuarios no-superusuarios, aplicar permisos estrictos
         if self.action == "list":
             return [HasPermission("Ver Usuarios")]
-        elif self.action in ["create", "update", "partial_update"]:
-            # Verificar si el usuario tiene permiso para crear/editar el tipo específico de usuario
-            user_type = self.request.data.get("rol")
-            if user_type:
-                try:
-                    rol = Rol.objects.get(id=user_type)
-                    if rol.nombre == "Administrador":
-                        return [HasPermission("Gestionar Administradores")]
-                    elif rol.nombre == "Instructor":
-                        return [HasPermission("Gestionar Instructores")]
-                except Rol.DoesNotExist:
-                    pass
+        elif self.action == "create":
             return [HasPermission("Crear Usuario")]
+        elif self.action in ["update", "partial_update"]:
+            return [HasPermission("Editar Usuario")]
         elif self.action == "destroy":
             return [HasPermission("Eliminar Usuario")]
         return [IsAuthenticated()]
@@ -163,8 +174,13 @@ class UserViewSet(viewsets.ModelViewSet):
 
     def update(self, request, *args, **kwargs):
         try:
+            print(f"Datos recibidos para actualizar usuario: {request.data}")
+            
             user = self.get_object()
+            print(f"Usuario a actualizar: {user.username} (ID: {user.id})")
+            
             old_roles = list(user.roles.values_list("id", flat=True))
+            print(f"Roles anteriores: {old_roles}")
 
             # Actualizar datos del usuario
             user.username = request.data.get("username", user.username)
@@ -175,26 +191,37 @@ class UserViewSet(viewsets.ModelViewSet):
 
             # Actualizar contraseña si se proporciona
             if "password" in request.data and request.data["password"]:
+                print(f"Actualizando contraseña para usuario {user.username}")
                 user.set_password(request.data["password"])
 
+            print("Guardando cambios del usuario...")
             user.save()
+            print("Usuario guardado exitosamente")
 
             # Actualizar rol si se proporciona
             if "rol" in request.data:
                 nuevo_rol_id = request.data["rol"]
+                print(f"Actualizando rol a: {nuevo_rol_id}")
 
                 # Eliminar roles actuales
                 UsuarioRol.objects.filter(usuario=user).delete()
+                print("Roles anteriores eliminados")
 
                 # Asignar nuevo rol
                 if nuevo_rol_id:
                     try:
                         rol = Rol.objects.get(id=nuevo_rol_id)
                         UsuarioRol.objects.create(usuario=user, rol=rol)
+                        print(f"Nuevo rol asignado: {rol.nombre}")
                     except Rol.DoesNotExist:
-                        pass
+                        print(f"Error: Rol con ID {nuevo_rol_id} no existe")
+                        return Response(
+                            {"error": f"Rol con ID {nuevo_rol_id} no encontrado"}, 
+                            status=status.HTTP_400_BAD_REQUEST
+                        )
 
             # Registrar en bitácora
+            print("Registrando en bitácora...")
             Bitacora.log_activity(
                 usuario=request.user,
                 tipo_accion="update_user",
@@ -210,11 +237,19 @@ class UserViewSet(viewsets.ModelViewSet):
                     "nuevo_rol": request.data.get("rol"),
                 },
             )
+            print("Bitácora registrada exitosamente")
 
             serializer = self.get_serializer(user)
+            print("Serialización completada, enviando respuesta")
             return Response(serializer.data)
         except Exception as e:
-            return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+            print(f"Error en update: {type(e).__name__}: {str(e)}")
+            import traceback
+            print(f"Traceback completo: {traceback.format_exc()}")
+            return Response(
+                {"error": f"{type(e).__name__}: {str(e)}"}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
 
     def get_client_ip(self, request):
         x_forwarded_for = request.META.get("HTTP_X_FORWARDED_FOR")
@@ -907,10 +942,31 @@ def change_password(request):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-        # Validar la nueva contraseña
-        if len(new_password) < 6:
+        # Validar la nueva contraseña usando AUTH_PASSWORD_VALIDATORS
+        try:
+            validate_password(new_password, user=request.user)
+        except ValidationError as e:
+            # Personalizar el mensaje de error para el frontend
+            error_messages = []
+            for error in e.messages:
+                # Agregar emojis y personalización para el gimnasio
+                if "too similar" in error.lower():
+                    error_messages.append("🔐 Tu nueva contraseña es muy similar a tu información personal")
+                elif "too short" in error.lower():
+                    error_messages.append("📏 Tu contraseña necesita ser más larga (mínimo 8 caracteres)")
+                elif "too common" in error.lower():
+                    error_messages.append("⚠️ Esta contraseña es muy común, elige una más única")
+                elif "entirely numeric" in error.lower():
+                    error_messages.append("🔢 No puedes usar solo números, agrega letras")
+                else:
+                    error_messages.append(f"❌ {error}")
+            
             return Response(
-                {"message": "La nueva contraseña debe tener al menos 6 caracteres"},
+                {
+                    "message": "Contraseña no válida",
+                    "errors": error_messages,
+                    "suggestion": "💡 Consejo: Usa una combinación de letras, números y símbolos"
+                },
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
@@ -945,62 +1001,670 @@ def change_password(request):
 @permission_classes([])  # No requiere autenticación
 def forgot_password(request):
     """
-    Endpoint para solicitar restablecimiento de contraseña.
-    Simula el envío de email (en un entorno real enviaría un email).
+    Endpoint para solicitar restablecimiento de contraseña por correo.
     """
     try:
         email = request.data.get("email")
 
         if not email:
             return Response(
-                {"message": "El email es requerido"}, status=status.HTTP_400_BAD_REQUEST
+                {"message": "El email es requerido"}, 
+                status=status.HTTP_400_BAD_REQUEST
             )
 
         # Buscar usuario por email
         try:
-            user = User.objects.get(email=email)
+            user = User.objects.get(email=email, is_active=True)
+            
+            # Invalidar tokens anteriores del usuario
+            PasswordResetToken.objects.filter(
+                user=user, 
+                used=False,
+                expires_at__gt=timezone.now()
+            ).update(used=True)
 
-            # Registrar en bitácora usando el nuevo sistema
-            Bitacora.log_activity(
-                usuario=user,
-                tipo_accion="forgot_password",
-                accion="Solicitud de restablecimiento de contraseña",
-                descripcion=f"Solicitud para email: {email}",
-                nivel="info",
+            # Crear nuevo token
+            reset_token = PasswordResetToken.objects.create(
+                user=user,
                 ip_address=get_client_ip(request),
-                user_agent=request.META.get("HTTP_USER_AGENT", ""),
-                datos_adicionales={"email": email},
+                user_agent=request.META.get("HTTP_USER_AGENT", "")
             )
 
-            # En un entorno real, aquí se enviaría un email con un token
-            # Por ahora solo simulamos el éxito
-            return Response(
-                {"message": "Se han enviado las instrucciones a tu email"},
-                status=status.HTTP_200_OK,
+            # Enviar email de recuperación
+            email_sent = EmailService.send_password_reset_email(
+                user=user,
+                token=str(reset_token.token),
+                ip_address=get_client_ip(request),
+                user_agent=request.META.get("HTTP_USER_AGENT", "")
             )
+
+            if email_sent:
+                return Response(
+                    {
+                        "message": "Si existe una cuenta con este email, recibirás instrucciones para recuperar tu contraseña.",
+                        "email": email
+                    },
+                    status=status.HTTP_200_OK
+                )
+            else:
+                # Registrar error pero no revelar que falló el envío
+                Bitacora.log_activity(
+                    usuario=user,
+                    tipo_accion="error",
+                    accion="Error enviando correo de recuperación",
+                    descripcion=f"Error enviando correo a {email}",
+                    nivel="error",
+                    ip_address=get_client_ip(request),
+                    user_agent=request.META.get("HTTP_USER_AGENT", ""),
+                    datos_adicionales={"email": email}
+                )
+                
+                return Response(
+                    {
+                        "message": "Si existe una cuenta con este email, recibirás instrucciones para recuperar tu contraseña.",
+                        "email": email
+                    },
+                    status=status.HTTP_200_OK
+                )
 
         except User.DoesNotExist:
-            # Por seguridad, no revelamos si el email existe o no
-            # Pero registramos el intento en bitácora
+            # No revelar que el usuario no existe por seguridad
+            # Registrar intento de acceso con email inexistente
             Bitacora.log_activity(
                 usuario=None,
                 tipo_accion="forgot_password_failed",
-                accion="Intento de restablecimiento con email inexistente",
-                descripcion=f"Email consultado: {email}",
+                accion="Intento de recuperación con email inexistente",
+                descripcion=f"Email no encontrado: {email}",
                 nivel="warning",
                 ip_address=get_client_ip(request),
                 user_agent=request.META.get("HTTP_USER_AGENT", ""),
-                datos_adicionales={"email": email},
+                datos_adicionales={"email": email, "reason": "user_not_found"}
             )
 
-            # Respondemos como si hubiera éxito para no revelar información
             return Response(
-                {"message": "Se han enviado las instrucciones a tu email"},
-                status=status.HTTP_200_OK,
+                {
+                    "message": "Si existe una cuenta con este email, recibirás instrucciones para recuperar tu contraseña.",
+                    "email": email
+                },
+                status=status.HTTP_200_OK
             )
 
-    except Exception:
+    except Exception as e:
         return Response(
             {"message": "Error interno del servidor"},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
+
+
+@api_view(["POST"])
+@permission_classes([])  # No requiere autenticación
+def reset_password(request):
+    """
+    Endpoint para restablecer contraseña usando token enviado por email.
+    """
+    try:
+        token = request.data.get("token")
+        new_password = request.data.get("password")
+        
+        if not token or not new_password:
+            return Response(
+                {"message": "Token y nueva contraseña son requeridos"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        try:
+            # Buscar token válido
+            reset_token = PasswordResetToken.objects.get(
+                token=token,
+                used=False
+            )
+            
+            # Verificar si el token expiró
+            if reset_token.is_expired():
+                return Response(
+                    {"message": "El token ha expirado. Solicita un nuevo enlace de recuperación."},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            # Validar nueva contraseña
+            try:
+                validate_password(new_password, user=reset_token.user)
+            except ValidationError as e:
+                return Response(
+                    {
+                        "message": "Contraseña no válida",
+                        "errors": e.messages
+                    },
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            # Cambiar contraseña
+            user = reset_token.user
+            user.set_password(new_password)
+            user.save()
+            
+            # Marcar token como usado
+            reset_token.mark_as_used()
+            
+            # Invalidar otros tokens del usuario
+            PasswordResetToken.objects.filter(
+                user=user,
+                used=False
+            ).update(used=True)
+            
+            # Registrar en bitácora
+            Bitacora.log_activity(
+                usuario=user,
+                tipo_accion="password_reset",
+                accion="Contraseña restablecida via email",
+                descripcion=f"Contraseña restablecida para {user.username}",
+                nivel="info",
+                ip_address=get_client_ip(request),
+                user_agent=request.META.get("HTTP_USER_AGENT", ""),
+                datos_adicionales={
+                    "token_used": str(token),
+                    "reset_method": "email_token"
+                }
+            )
+            
+            # Enviar notificación de cambio exitoso
+            EmailService.send_password_changed_notification(
+                user=user,
+                ip_address=get_client_ip(request)
+            )
+            
+            return Response(
+                {
+                    "message": "Contraseña restablecida exitosamente",
+                    "username": user.username
+                },
+                status=status.HTTP_200_OK
+            )
+            
+        except PasswordResetToken.DoesNotExist:
+            return Response(
+                {"message": "Token inválido o ya utilizado"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+            
+    except Exception as e:
+        return Response(
+            {"message": "Error interno del servidor"},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+
+@api_view(["GET", "PUT"])
+@permission_classes([IsAuthenticated])
+def user_profile(request):
+    """
+    Endpoint para ver y actualizar el perfil del usuario autenticado.
+    GET: Obtiene la información del perfil
+    PUT: Actualiza la información del perfil
+    """
+    user = request.user
+    
+    if request.method == "GET":
+        try:
+            # Obtener roles del usuario
+            user_roles = UsuarioRol.objects.filter(usuario=user).select_related('rol')
+            roles = [{"id": ur.rol.id, "nombre": ur.rol.nombre} for ur in user_roles]
+            
+            profile_data = {
+                "id": user.id,
+                "username": user.username,
+                "email": user.email,
+                "first_name": user.first_name,
+                "last_name": user.last_name,
+                "date_joined": user.date_joined,
+                "last_login": user.last_login,
+                "is_active": user.is_active,
+                "roles": roles
+            }
+            
+            return Response(profile_data, status=status.HTTP_200_OK)
+            
+        except Exception as e:
+            return Response(
+                {"message": "Error al obtener el perfil"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+    
+    elif request.method == "PUT":
+        try:
+            # Campos que el usuario puede actualizar
+            updatable_fields = ['email', 'first_name', 'last_name']
+            updated_fields = []
+            
+            for field in updatable_fields:
+                if field in request.data:
+                    new_value = request.data[field]
+                    
+                    # Validación específica para email
+                    if field == 'email':
+                        if new_value and new_value != user.email:
+                            # Verificar que el email no esté en uso por otro usuario
+                            if User.objects.filter(email=new_value).exclude(id=user.id).exists():
+                                return Response(
+                                    {"message": "Este email ya está en uso por otro usuario"},
+                                    status=status.HTTP_400_BAD_REQUEST
+                                )
+                            
+                            # Validar formato de email
+                            from django.core.validators import validate_email
+                            from django.core.exceptions import ValidationError
+                            try:
+                                validate_email(new_value)
+                            except ValidationError:
+                                return Response(
+                                    {"message": "El formato del email no es válido"},
+                                    status=status.HTTP_400_BAD_REQUEST
+                                )
+                    
+                    # Validación para nombres
+                    if field in ['first_name', 'last_name']:
+                        if new_value and len(new_value.strip()) < 2:
+                            return Response(
+                                {"message": f"El {field} debe tener al menos 2 caracteres"},
+                                status=status.HTTP_400_BAD_REQUEST
+                            )
+                        new_value = new_value.strip()
+                    
+                    # Actualizar el campo si es diferente
+                    current_value = getattr(user, field)
+                    if new_value != current_value:
+                        setattr(user, field, new_value)
+                        updated_fields.append(field)
+            
+            # Si no hay cambios
+            if not updated_fields:
+                return Response(
+                    {"message": "No se detectaron cambios en el perfil"},
+                    status=status.HTTP_200_OK
+                )
+            
+            # Guardar cambios
+            user.save()
+            
+            # Registrar en bitácora
+            Bitacora.log_activity(
+                usuario=user,
+                tipo_accion="profile_update",
+                accion="Actualización de perfil",
+                descripcion=f"Usuario {user.username} actualizó los campos: {', '.join(updated_fields)}",
+                nivel="info",
+                ip_address=get_client_ip(request),
+                user_agent=request.META.get("HTTP_USER_AGENT", ""),
+                datos_adicionales={
+                    "updated_fields": updated_fields,
+                    "user_id": user.id
+                }
+            )
+            
+            # Respuesta exitosa con datos actualizados
+            user_roles = UsuarioRol.objects.filter(usuario=user).select_related('rol')
+            roles = [{"id": ur.rol.id, "nombre": ur.rol.nombre} for ur in user_roles]
+            
+            updated_profile = {
+                "id": user.id,
+                "username": user.username,
+                "email": user.email,
+                "first_name": user.first_name,
+                "last_name": user.last_name,
+                "date_joined": user.date_joined,
+                "last_login": user.last_login,
+                "is_active": user.is_active,
+                "roles": roles
+            }
+            
+            return Response(
+                {
+                    "message": f"Perfil actualizado exitosamente. Campos modificados: {', '.join(updated_fields)}",
+                    "profile": updated_profile,
+                    "updated_fields": updated_fields
+                },
+                status=status.HTTP_200_OK
+            )
+            
+        except Exception as e:
+            return Response(
+                {"message": "Error al actualizar el perfil"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+
+# ===== VIEWSETS PARA CLIENTES Y MEMBRESÍAS =====
+
+class ClienteViewSet(viewsets.ModelViewSet):
+    """ViewSet para gestionar clientes"""
+    queryset = Cliente.objects.all()
+    serializer_class = ClienteSerializer
+    
+    def get_permissions(self):
+        """Establecer permisos según la acción"""
+        if self.action in ['list', 'retrieve']:
+            permission_classes = [IsAuthenticated, HasPermission('ver_cliente')]
+        elif self.action == 'create':
+            permission_classes = [IsAuthenticated, HasPermission('crear_cliente')]
+        elif self.action in ['update', 'partial_update']:
+            permission_classes = [IsAuthenticated, HasPermission('editar_cliente')]
+        elif self.action == 'destroy':
+            permission_classes = [IsAuthenticated, HasPermission('eliminar_cliente')]
+        else:
+            permission_classes = [IsAuthenticated]
+        
+        return [permission() for permission in permission_classes]
+    
+    def get_serializer_class(self):
+        """Usar serializer detallado para retrieve"""
+        if self.action == 'retrieve':
+            return ClienteDetailSerializer
+        return ClienteSerializer
+    
+    def create(self, request, *args, **kwargs):
+        """Crear cliente con logging"""
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        cliente = serializer.save()
+        
+        # Registrar en bitácora
+        Bitacora.log_activity(
+            usuario=request.user,
+            tipo_accion='create_client',
+            accion=f'Cliente creado: {cliente.nombre_completo}',
+            descripcion=f'Se creó el cliente {cliente.nombre_completo}',
+            ip_address=request.META.get('REMOTE_ADDR', '127.0.0.1'),
+            user_agent=request.META.get('HTTP_USER_AGENT', ''),
+            datos_adicionales={'cliente_id': cliente.id}
+        )
+        
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    
+    def update(self, request, *args, **kwargs):
+        """Actualizar cliente con logging"""
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        cliente = serializer.save()
+        
+        # Registrar en bitácora
+        Bitacora.log_activity(
+            usuario=request.user,
+            tipo_accion='update_client',
+            accion=f'Cliente actualizado: {cliente.nombre_completo}',
+            descripcion=f'Se actualizó el cliente {cliente.nombre_completo}',
+            ip_address=request.META.get('REMOTE_ADDR', '127.0.0.1'),
+            user_agent=request.META.get('HTTP_USER_AGENT', ''),
+            datos_adicionales={'cliente_id': cliente.id}
+        )
+        
+        return Response(serializer.data)
+    
+    def destroy(self, request, *args, **kwargs):
+        """Desactivar cliente en lugar de eliminarlo"""
+        instance = self.get_object()
+        cliente_nombre = instance.nombre_completo
+        
+        # Desactivar en lugar de eliminar
+        instance.activo = False
+        instance.save()
+        
+        # Registrar en bitácora
+        Bitacora.log_activity(
+            usuario=request.user,
+            tipo_accion='deactivate_client',
+            accion=f'Cliente desactivado: {cliente_nombre}',
+            descripcion=f'Se desactivó el cliente {cliente_nombre}',
+            ip_address=request.META.get('REMOTE_ADDR', '127.0.0.1'),
+            user_agent=request.META.get('HTTP_USER_AGENT', ''),
+            datos_adicionales={'cliente_id': instance.id}
+        )
+        
+        return Response(status=status.HTTP_204_NO_CONTENT)
+    
+    @action(detail=False, methods=['get'])
+    def activos(self, request):
+        """Obtener solo clientes activos"""
+        clientes_activos = self.queryset.filter(activo=True)
+        serializer = self.get_serializer(clientes_activos, many=True)
+        return Response(serializer.data)
+
+
+class PlanMembresiaViewSet(viewsets.ModelViewSet):
+    """ViewSet para gestionar planes de membresía"""
+    queryset = PlanMembresia.objects.all()
+    serializer_class = PlanMembresiaSerializer
+    
+    def get_permissions(self):
+        """Establecer permisos según la acción"""
+        if self.action in ['list', 'retrieve']:
+            permission_classes = [IsAuthenticated, HasPermission('ver_plan')]
+        elif self.action == 'create':
+            permission_classes = [IsAuthenticated, HasPermission('crear_plan')]
+        elif self.action in ['update', 'partial_update']:
+            permission_classes = [IsAuthenticated, HasPermission('editar_plan')]
+        elif self.action == 'destroy':
+            permission_classes = [IsAuthenticated, HasPermission('eliminar_plan')]
+        else:
+            permission_classes = [IsAuthenticated]
+        
+        return [permission() for permission in permission_classes]
+    
+    @action(detail=False, methods=['get'])
+    def activos(self, request):
+        """Obtener solo planes activos"""
+        planes_activos = self.queryset.filter(activo=True)
+        serializer = self.get_serializer(planes_activos, many=True)
+        return Response(serializer.data)
+
+
+class PromocionViewSet(viewsets.ModelViewSet):
+    """ViewSet para gestionar promociones"""
+    queryset = Promocion.objects.all()
+    serializer_class = PromocionSerializer
+    
+    def get_permissions(self):
+        """Establecer permisos según la acción"""
+        if self.action in ['list', 'retrieve']:
+            permission_classes = [IsAuthenticated, HasPermission('ver_promocion')]
+        elif self.action == 'create':
+            permission_classes = [IsAuthenticated, HasPermission('crear_promocion')]
+        elif self.action in ['update', 'partial_update']:
+            permission_classes = [IsAuthenticated, HasPermission('editar_promocion')]
+        elif self.action == 'destroy':
+            permission_classes = [IsAuthenticated, HasPermission('eliminar_promocion')]
+        else:
+            permission_classes = [IsAuthenticated]
+        
+        return [permission() for permission in permission_classes]
+    
+    @action(detail=False, methods=['get'])
+    def activas(self, request):
+        """Obtener solo promociones activas y vigentes"""
+        promociones_activas = [p for p in self.queryset.all() if p.is_active()]
+        serializer = self.get_serializer(promociones_activas, many=True)
+        return Response(serializer.data)
+
+
+class InscripcionMembresiaViewSet(viewsets.ModelViewSet):
+    """ViewSet para gestionar inscripciones de membresía"""
+    queryset = InscripcionMembresia.objects.all()
+    serializer_class = InscripcionMembresiaSerializer
+    
+    def get_permissions(self):
+        """Establecer permisos según la acción"""
+        if self.action in ['list', 'retrieve']:
+            permission_classes = [IsAuthenticated, HasPermission('ver_inscripcion')]
+        elif self.action == 'create':
+            permission_classes = [IsAuthenticated, HasPermission('crear_inscripcion')]
+        elif self.action in ['update', 'partial_update']:
+            permission_classes = [IsAuthenticated, HasPermission('editar_inscripcion')]
+        elif self.action == 'destroy':
+            permission_classes = [IsAuthenticated, HasPermission('eliminar_inscripcion')]
+        else:
+            permission_classes = [IsAuthenticated]
+        
+        return [permission() for permission in permission_classes]
+    
+    def create(self, request, *args, **kwargs):
+        """Crear inscripción con logging"""
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        inscripcion = serializer.save()
+        
+        # Registrar en bitácora
+        Bitacora.log_activity(
+            usuario=request.user,
+            tipo_accion='create_inscription',
+            accion=f'Inscripción creada para: {inscripcion.cliente.nombre_completo}',
+            descripcion=f'Se creó inscripción por ${inscripcion.monto} - {inscripcion.get_metodo_de_pago_display()}',
+            ip_address=request.META.get('REMOTE_ADDR', '127.0.0.1'),
+            user_agent=request.META.get('HTTP_USER_AGENT', ''),
+            datos_adicionales={'inscripcion_id': inscripcion.id, 'cliente_id': inscripcion.cliente.id}
+        )
+        
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+
+class MembresiaViewSet(viewsets.ModelViewSet):
+    """ViewSet para gestionar membresías"""
+    queryset = Membresia.objects.all()
+    serializer_class = MembresiaSerializer
+    
+    def get_permissions(self):
+        """Establecer permisos según la acción"""
+        if self.action in ['list', 'retrieve']:
+            permission_classes = [IsAuthenticated, HasPermission('ver_membresia')]
+        elif self.action == 'create':
+            permission_classes = [IsAuthenticated, HasPermission('crear_membresia')]
+        elif self.action in ['update', 'partial_update']:
+            permission_classes = [IsAuthenticated, HasPermission('editar_membresia')]
+        elif self.action == 'destroy':
+            permission_classes = [IsAuthenticated, HasPermission('eliminar_membresia')]
+        else:
+            permission_classes = [IsAuthenticated]
+        
+        return [permission() for permission in permission_classes]
+    
+    def create(self, request, *args, **kwargs):
+        """Crear membresía asignando automáticamente el usuario que la registra"""
+        data = request.data.copy()
+        data['usuario_registro'] = request.user.id
+        
+        serializer = self.get_serializer(data=data)
+        serializer.is_valid(raise_exception=True)
+        membresia = serializer.save()
+        
+        # Registrar en bitácora
+        Bitacora.log_activity(
+            usuario=request.user,
+            tipo_accion='create_membership',
+            accion=f'Membresía creada para: {membresia.inscripcion.cliente.nombre_completo}',
+            descripcion=f'Plan: {membresia.plan.nombre} ({membresia.fecha_inicio} - {membresia.fecha_fin})',
+            ip_address=request.META.get('REMOTE_ADDR', '127.0.0.1'),
+            user_agent=request.META.get('HTTP_USER_AGENT', ''),
+            datos_adicionales={'membresia_id': membresia.id, 'cliente_id': membresia.inscripcion.cliente.id}
+        )
+        
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    
+    @action(detail=False, methods=['get'])
+    def activas(self, request):
+        """Obtener solo membresías activas"""
+        membresias_activas = [m for m in self.queryset.all() if m.is_active()]
+        serializer = self.get_serializer(membresias_activas, many=True)
+        return Response(serializer.data)
+    
+    @action(detail=False, methods=['get'])
+    def por_vencer(self, request):
+        """Obtener membresías que vencen en los próximos días"""
+        dias = int(request.query_params.get('dias', 30))
+        from datetime import date, timedelta
+        
+        fecha_limite = date.today() + timedelta(days=dias)
+        membresias_por_vencer = self.queryset.filter(
+            estado='activa',
+            fecha_fin__lte=fecha_limite,
+            fecha_fin__gte=date.today()
+        )
+        
+        serializer = self.get_serializer(membresias_por_vencer, many=True)
+        return Response(serializer.data)
+    
+    @action(detail=True, methods=['post'])
+    def aplicar_promocion(self, request, pk=None):
+        """Aplicar una promoción a una membresía"""
+        membresia = self.get_object()
+        promocion_id = request.data.get('promocion_id')
+        
+        if not promocion_id:
+            return Response(
+                {"error": "Se requiere el ID de la promoción"},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        try:
+            promocion = Promocion.objects.get(id=promocion_id)
+            
+            if not promocion.is_active():
+                return Response(
+                    {"error": "La promoción no está activa"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            # Verificar si ya tiene esta promoción aplicada
+            if MembresiaPromocion.objects.filter(membresia=membresia, promocion=promocion).exists():
+                return Response(
+                    {"error": "Esta promoción ya está aplicada a la membresía"},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            # Aplicar la promoción
+            membresia_promocion = MembresiaPromocion.objects.create(
+                membresia=membresia,
+                promocion=promocion
+            )
+            
+            # Registrar en bitácora
+            Bitacora.log_activity(
+                usuario=request.user,
+                tipo_accion='apply_promotion',
+                accion=f'Promoción aplicada: {promocion.nombre}',
+                descripcion=f'Se aplicó {promocion.descuento}% de descuento a membresía de {membresia.inscripcion.cliente.nombre_completo}',
+                ip_address=request.META.get('REMOTE_ADDR', '127.0.0.1'),
+                user_agent=request.META.get('HTTP_USER_AGENT', ''),
+                datos_adicionales={
+                    'membresia_id': membresia.id, 
+                    'promocion_id': promocion.id,
+                    'descuento': float(promocion.descuento)
+                }
+            )
+            
+            serializer = MembresiaPromocionSerializer(membresia_promocion)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+            
+        except Promocion.DoesNotExist:
+            return Response(
+                {"error": "La promoción no existe"},
+                status=status.HTTP_404_NOT_FOUND
+            )
+
+
+class MembresiaPromocionViewSet(viewsets.ModelViewSet):
+    """ViewSet para gestionar relaciones membresía-promoción"""
+    queryset = MembresiaPromocion.objects.all()
+    serializer_class = MembresiaPromocionSerializer
+    
+    def get_permissions(self):
+        """Establecer permisos según la acción"""
+        if self.action in ['list', 'retrieve']:
+            permission_classes = [IsAuthenticated, HasPermission('ver_promocion')]
+        elif self.action == 'create':
+            permission_classes = [IsAuthenticated, HasPermission('aplicar_promocion')]
+        elif self.action == 'destroy':
+            permission_classes = [IsAuthenticated, HasPermission('remover_promocion')]
+        else:
+            permission_classes = [IsAuthenticated]
+        
+        return [permission() for permission in permission_classes]

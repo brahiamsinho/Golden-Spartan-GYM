@@ -21,7 +21,7 @@
 
 .main {
   flex: 1;
-  margin-left: 280px;
+  margin-left: 300px;
   overflow-y: auto;
   background: #0f172a;
   transition: all 0.3s ease;
@@ -86,7 +86,7 @@
 /* Responsive para sidebar colapsado */
 @media (max-width: 1200px) {
   .main {
-    margin-left: 260px;
+    margin-left: 300px;
   }
 
   .container.sidebarCollapsed .main {
@@ -96,7 +96,7 @@
 
 @media (max-width: 1024px) {
   .main {
-    margin-left: 240px;
+    margin-left: 300px;
   }
 
   .container.sidebarCollapsed .main {

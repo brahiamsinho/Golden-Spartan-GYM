@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import {
   PermissionsProvider,
@@ -11,6 +11,9 @@ import UsersPage from "../../pages/UsersPage";
 import RolesPage from "../../pages/RolesPage";
 import PermissionsPage from "../../pages/PermissionsPage";
 import ActivityLogPage from "../../pages/ActivityLogPage";
+import ProfilePage from "../../pages/ProfilePage";
+import ClientesPage from "../../pages/ClientesPage";
+import PlanesPage from "../../pages/PlanesPage";
 import LogoutModal from "../modals/LogoutModal";
 import LogoutSuccessModal from "../modals/LogoutSuccessModal";
 import ProtectedRoute from "./ProtectedRoute";
@@ -150,6 +153,26 @@ function DashboardContent({
               }
             />
             <Route
+              path={ROUTES.CLIENTES}
+              element={
+                <ProtectedRoute requiredPermission="ver_cliente">
+                  <ClientesPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path={ROUTES.PLANES}
+              element={
+                <ProtectedRoute requiredPermission="ver_plan">
+                  <PlanesPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path={ROUTES.PROFILE}
+              element={<ProfilePage />}
+            />
+            <Route
               path="*"
               element={<Navigate to={ROUTES.DASHBOARD} replace />}
             />
@@ -276,9 +299,5 @@ export default function AppRouter() {
     return null; // This will be handled by App.tsx
   }
 
-  return (
-    <BrowserRouter>
-      <DashboardLayout />
-    </BrowserRouter>
-  );
+  return <DashboardLayout />;
 }

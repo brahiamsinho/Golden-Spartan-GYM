@@ -9,6 +9,12 @@ import {
   Shield,
   Lock,
   Activity,
+  User,
+  UserCheck,
+  CreditCard,
+  Gift,
+  Calendar,
+  FileText,
 } from "lucide-react";
 import { usePermissions } from "../../contexts/PermissionsContext";
 import { ROUTES, ROUTE_PERMISSIONS } from "../../config/routes";
@@ -89,11 +95,54 @@ export default function Sidebar({
       path: ROUTES.ACTIVITY_LOG,
       permission: ROUTE_PERMISSIONS[ROUTES.ACTIVITY_LOG],
     },
+    // Separador para módulo de clientes
+    {
+      id: "clientes",
+      label: "Clientes",
+      icon: UserCheck,
+      path: ROUTES.CLIENTES,
+      permission: ROUTE_PERMISSIONS[ROUTES.CLIENTES],
+    },
+    {
+      id: "planes",
+      label: "Planes",
+      icon: CreditCard,
+      path: ROUTES.PLANES,
+      permission: ROUTE_PERMISSIONS[ROUTES.PLANES],
+    },
+    {
+      id: "promociones",
+      label: "Promociones",
+      icon: Gift,
+      path: ROUTES.PROMOCIONES,
+      permission: ROUTE_PERMISSIONS[ROUTES.PROMOCIONES],
+    },
+    {
+      id: "membresias",
+      label: "Membresías",
+      icon: Calendar,
+      path: ROUTES.MEMBRESIAS,
+      permission: ROUTE_PERMISSIONS[ROUTES.MEMBRESIAS],
+    },
+    {
+      id: "inscripciones",
+      label: "Inscripciones",
+      icon: FileText,
+      path: ROUTES.INSCRIPCIONES,
+      permission: ROUTE_PERMISSIONS[ROUTES.INSCRIPCIONES],
+    },
+    {
+      id: "profile",
+      label: "Mi Perfil",
+      icon: User,
+      path: ROUTES.PROFILE,
+      permission: null, // Todos los usuarios autenticados pueden ver su perfil
+    },
   ];
 
   // Filtrar elementos del menú basándose en los permisos del usuario
   const menuItems = allMenuItems.filter((item) =>
-    hasPermission(item.permission)
+    item.permission === null || hasPermission(item.permission)
   );
 
   const handleNavItemClick = (path: string) => {
@@ -135,8 +184,8 @@ export default function Sidebar({
             <X size={20} />
           )}
         </button>
-        {(!isCollapsed || isMobile) && (
-          <h2 className={styles.title}>Golden Spartan </h2>
+        {(!isCollapsed || isMobile || isMobileOpen) && (
+          <h2 className={styles.title}>Golden Spartan</h2>
         )}
       </div>
 
@@ -151,7 +200,7 @@ export default function Sidebar({
               className={`${styles.navItem} ${isActive ? styles.active : ""}`}
             >
               <Icon size={20} />
-              {(!isCollapsed || isMobile) && <span>{item.label}</span>}
+              {(!isCollapsed || isMobile || isMobileOpen) && <span>{item.label}</span>}
             </button>
           );
         })}
@@ -160,7 +209,7 @@ export default function Sidebar({
       <div className={styles.footer}>
         <button onClick={onLogout} className={styles.logoutButton}>
           <LogOut size={20} />
-          {(!isCollapsed || isMobile) && <span>Cerrar Sesión</span>}
+          {(!isCollapsed || isMobile || isMobileOpen) && <span>Cerrar Sesión</span>}
         </button>
       </div>
     </div>

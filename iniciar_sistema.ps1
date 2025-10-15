@@ -30,6 +30,43 @@ if (Test-Port 5173) {
     Start-Sleep -Seconds 2
 }
 
+# Verificar y iniciar MailHog
+if (Test-Port 8025) {
+    Write-Host "✅ MailHog ya está ejecutándose en puerto 8025" -ForegroundColor Green
+} else {
+    Write-Host "📧 Iniciando MailHog..." -ForegroundColor Yellow
+    
+    # Buscar MailHog en diferentes ubicaciones
+    $mailhogPaths = @(
+        "mailhog",
+        ".\tools\mailhog\mailhog.exe",
+        "$env:GOPATH\bin\mailhog.exe",
+        "$env:USERPROFILE\go\bin\mailhog.exe"
+    )
+    
+    $mailhogFound = $false
+    foreach ($path in $mailhogPaths) {
+        try {
+            if (Get-Command $path -ErrorAction SilentlyContinue) {
+                Start-Process -FilePath $path -WindowStyle Hidden
+                $mailhogFound = $true
+                break
+            }
+        }
+        catch {
+            # Continuar con la siguiente ruta
+        }
+    }
+    
+    if ($mailhogFound) {
+        Write-Host "✅ MailHog iniciado correctamente" -ForegroundColor Green
+        Write-Host "🌐 Interfaz web: http://localhost:8025" -ForegroundColor Cyan
+    } else {
+        Write-Host "⚠️  MailHog no encontrado. Instálalo ejecutando: .\setup_mailhog.ps1" -ForegroundColor Yellow
+    }
+}
+}
+
 # Iniciar Backend
 Write-Host "🔧 Iniciando Backend (Django)..." -ForegroundColor Cyan
 Set-Location backend

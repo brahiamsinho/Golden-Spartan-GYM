@@ -50,6 +50,43 @@ class ApiService {
     }
   }
 
+  // Métodos genéricos para API REST
+  async get<T>(url: string): Promise<{ data: T }> {
+    const response = await fetch(`${API_BASE_URL}${url}`, {
+      headers: this.getAuthHeaders(),
+    });
+    const data = await this.handleResponse(response);
+    return { data };
+  }
+
+  async post<T>(url: string, data: any): Promise<{ data: T }> {
+    const response = await fetch(`${API_BASE_URL}${url}`, {
+      method: "POST",
+      headers: this.getAuthHeaders(),
+      body: JSON.stringify(data),
+    });
+    const responseData = await this.handleResponse(response);
+    return { data: responseData };
+  }
+
+  async put<T>(url: string, data: any): Promise<{ data: T }> {
+    const response = await fetch(`${API_BASE_URL}${url}`, {
+      method: "PUT",
+      headers: this.getAuthHeaders(),
+      body: JSON.stringify(data),
+    });
+    const responseData = await this.handleResponse(response);
+    return { data: responseData };
+  }
+
+  async delete(url: string): Promise<void> {
+    const response = await fetch(`${API_BASE_URL}${url}`, {
+      method: "DELETE",
+      headers: this.getAuthHeaders(),
+    });
+    await this.handleResponse(response);
+  }
+
   // Autenticación
   async login(username: string, password: string) {
     const response = await fetch(`${API_BASE_URL}/token/`, {
@@ -232,6 +269,25 @@ class ApiService {
     return this.handleResponse(response);
   }
 
+  // Password Recovery
+  async forgotPassword(email: string) {
+    const response = await fetch(`${API_BASE_URL}/forgot-password/`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email }),
+    });
+    return this.handleResponse(response);
+  }
+
+  async resetPassword(token: string, password: string) {
+    const response = await fetch(`${API_BASE_URL}/reset-password/`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ token, password }),
+    });
+    return this.handleResponse(response);
+  }
+
   // Permisos
   async createPermission(permissionData: {
     nombre: string;
@@ -261,6 +317,28 @@ class ApiService {
     const response = await fetch(`${API_BASE_URL}/permisos/${permissionId}/`, {
       method: "DELETE",
       headers: this.getAuthHeaders(),
+    });
+    return this.handleResponse(response);
+  }
+
+  // Métodos para el perfil de usuario
+  async getUserProfile() {
+    const response = await fetch(`${API_BASE_URL}/profile/`, {
+      method: "GET",
+      headers: this.getAuthHeaders(),
+    });
+    return this.handleResponse(response);
+  }
+
+  async updateUserProfile(profileData: {
+    email?: string;
+    first_name?: string;
+    last_name?: string;
+  }) {
+    const response = await fetch(`${API_BASE_URL}/profile/`, {
+      method: "PUT",
+      headers: this.getAuthHeaders(),
+      body: JSON.stringify(profileData),
     });
     return this.handleResponse(response);
   }

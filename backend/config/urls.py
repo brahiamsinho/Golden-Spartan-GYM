@@ -32,6 +32,15 @@ from api.views import (
     dashboard_stats,
     change_password,
     forgot_password,
+    reset_password,
+    user_profile,
+    # Nuevas vistas para clientes y membresías
+    ClienteViewSet,
+    PlanMembresiaViewSet,
+    PromocionViewSet,
+    InscripcionMembresiaViewSet,
+    MembresiaViewSet,
+    MembresiaPromocionViewSet,
 )
 from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
 
@@ -42,6 +51,14 @@ router.register(r"permisos", PermisoViewSet)
 router.register(r"roles-permisos", RolPermisoViewSet)
 router.register(r"usuarios-roles", UsuarioRolViewSet)
 router.register(r"bitacora", BitacoraViewSet)
+
+# Rutas para clientes y membresías
+router.register(r"clientes", ClienteViewSet)
+router.register(r"planes-membresia", PlanMembresiaViewSet)
+router.register(r"promociones", PromocionViewSet)
+router.register(r"inscripciones-membresia", InscripcionMembresiaViewSet)
+router.register(r"membresias", MembresiaViewSet)
+router.register(r"membresias-promociones", MembresiaPromocionViewSet)
 
 urlpatterns = [
     path("admin/", admin.site.urls),
@@ -55,4 +72,6 @@ urlpatterns = [
     path("api/dashboard/stats/", dashboard_stats, name="dashboard_stats"),
     path("api/change-password/", change_password, name="change_password"),
     path("api/forgot-password/", forgot_password, name="forgot_password"),
+    path("api/reset-password/", reset_password, name="reset_password"),
+    path("api/profile/", user_profile, name="user_profile"),
 ]
