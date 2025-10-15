@@ -55,14 +55,19 @@ function DashboardContent({
 
   // Verificar si el usuario tiene roles y permisos
   if (currentUser) {
-    // Si no tiene roles asignados o no tiene permisos
-    if (
-      currentUser.role.id === "no_role" ||
-      currentUser.role.id === "unknown_role" ||
-      userPermissions.length === 0
-    ) {
-      console.log("User has no roles or permissions:", currentUser);
-      return <NoRolesAssigned />;
+    // Los superusuarios siempre tienen acceso
+    if (currentUser.role.id === "super_admin") {
+      console.log("Superuser detected, granting full access:", currentUser);
+    } else {
+      // Si no tiene roles asignados o no tiene permisos
+      if (
+        currentUser.role.id === "no_role" ||
+        currentUser.role.id === "unknown_role" ||
+        userPermissions.length === 0
+      ) {
+        console.log("User has no roles or permissions:", currentUser);
+        return <NoRolesAssigned />;
+      }
     }
   }
 

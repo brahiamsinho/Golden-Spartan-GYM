@@ -70,8 +70,8 @@ const SYSTEM_ROLES: Record<string, Role> = {
   Instructor: {
     id: "instructor",
     name: "Instructor",
-    description: "Gestión básica de usuarios",
-    permissions: ["Ver Dashboard", "Ver Usuarios"],
+    description: "Acceso básico al dashboard",
+    permissions: ["Ver Dashboard"],
   },
 };
 
@@ -83,6 +83,19 @@ export function PermissionsProvider({
 
   useEffect(() => {
     if (user) {
+      // Verificar si es superusuario primero
+      if (user.is_superuser) {
+        console.log("User is superuser, granting all permissions:", user);
+        setCurrentUser({
+          id: String(user.id),
+          username: user.username,
+          email: user.email || `${user.username}@gym.com`,
+          role: SYSTEM_ROLES["Super Administrador"],
+          isActive: true,
+        });
+        return;
+      }
+
       // Determinar el rol basado en los datos del usuario
       let roleName = null;
 
@@ -148,6 +161,12 @@ export function PermissionsProvider({
       return false;
     }
 
+    // Los superusuarios siempre tienen acceso
+    if (currentUser.role.id === "super_admin") {
+      console.log(`Superuser granted permission: ${permissionId}`);
+      return true;
+    }
+
     // Si no tiene roles o tiene roles vacíos, denegar acceso
     if (
       currentUser.role.id === "no_role" ||
@@ -175,6 +194,11 @@ export function PermissionsProvider({
   const hasAnyPermission = (permissionIds: string[]): boolean => {
     if (!currentUser) return false;
 
+    // Los superusuarios siempre tienen acceso
+    if (currentUser.role.id === "super_admin") {
+      return true;
+    }
+
     // Si no tiene roles o tiene roles vacíos, denegar acceso
     if (
       currentUser.role.id === "no_role" ||
@@ -191,6 +215,11 @@ export function PermissionsProvider({
 
   const hasAllPermissions = (permissionIds: string[]): boolean => {
     if (!currentUser) return false;
+
+    // Los superusuarios siempre tienen acceso
+    if (currentUser.role.id === "super_admin") {
+      return true;
+    }
 
     // Si no tiene roles o tiene roles vacíos, denegar acceso
     if (
