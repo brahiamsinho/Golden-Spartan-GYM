@@ -39,8 +39,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     setIsLoading(true);
 
     try {
-      // Llamada real a la API de Django para obtener el token
-      const tokenResponse = await fetch("http://localhost:8000/api/token/", {
+copy env.example .env      const tokenResponse = await fetch("http://localhost:8000/api/token/", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

@@ -25,6 +25,7 @@ from api.views import (
     RolPermisoViewSet,
     UsuarioRolViewSet,
     BitacoraViewSet,
+    ClienteViewSet,
     get_user_permissions,
     registrar_bitacora,
     get_user_info,
@@ -42,6 +43,8 @@ router.register(r"permisos", PermisoViewSet)
 router.register(r"roles-permisos", RolPermisoViewSet)
 router.register(r"usuarios-roles", UsuarioRolViewSet)
 router.register(r"bitacora", BitacoraViewSet)
+router.register(r"clientes", ClienteViewSet)
+
 
 urlpatterns = [
     path("admin/", admin.site.urls),

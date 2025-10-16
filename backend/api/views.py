@@ -3,7 +3,7 @@ from rest_framework.decorators import api_view, permission_classes, action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from django.contrib.auth.models import User
-from .models import Rol, Permiso, RolPermiso, UsuarioRol, Bitacora
+from .models import Rol, Permiso, RolPermiso, UsuarioRol, Bitacora, Cliente
 from .serializers import (
     UserSerializer,
     RolSerializer,
@@ -13,8 +13,12 @@ from .serializers import (
     BitacoraSerializer,
     UserWithRolesSerializer,
     UserCreateSerializer,
+    ClienteSerializer,
 )
 from django.utils import timezone
+from django.core.mail import send_mail
+from django.conf import settings
+from rest_framework_simplejwt.tokens import RefreshToken
 
 
 # Permiso personalizado para verificar si el usuario tiene el permiso requerido
@@ -946,7 +950,7 @@ def change_password(request):
 def forgot_password(request):
     """
     Endpoint para solicitar restablecimiento de contraseña.
-    Simula el envío de email (en un entorno real enviaría un email).
+    Envía un email con un token JWT para restablecer la contraseña.
     """
     try:
         email = request.data.get("email")
@@ -960,20 +964,70 @@ def forgot_password(request):
         try:
             user = User.objects.get(email=email)
 
-            # Registrar en bitácora usando el nuevo sistema
-            Bitacora.log_activity(
-                usuario=user,
-                tipo_accion="forgot_password",
-                accion="Solicitud de restablecimiento de contraseña",
-                descripcion=f"Solicitud para email: {email}",
-                nivel="info",
-                ip_address=get_client_ip(request),
-                user_agent=request.META.get("HTTP_USER_AGENT", ""),
-                datos_adicionales={"email": email},
-            )
+            # Generar un token JWT especial para reset de contraseña
+            refresh = RefreshToken.for_user(user)
+            reset_token = str(refresh.access_token)
 
-            # En un entorno real, aquí se enviaría un email con un token
-            # Por ahora solo simulamos el éxito
+            # Construir URL de recuperación
+            reset_url = f"{settings.FRONTEND_URL}/reset-password?token={reset_token}"
+
+            # Enviar email
+            subject = "Recuperación de Contraseña - Golden Spartan Gym"
+            message = f"""
+Hola {user.first_name or user.username},
+
+Recibimos una solicitud para restablecer tu contraseña en Golden Spartan Gym.
+
+Haz clic en el siguiente enlace para crear una nueva contraseña:
+{reset_url}
+
+Este enlace expirará en 60 minutos por motivos de seguridad.
+
+Si no solicitaste este cambio, puedes ignorar este correo.
+
+Saludos,
+El equipo de Golden Spartan Gym
+            """
+
+            try:
+                send_mail(
+                    subject=subject,
+                    message=message,
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    recipient_list=[email],
+                    fail_silently=False,
+                )
+                
+                # Registrar en bitácora usando el nuevo sistema
+                Bitacora.log_activity(
+                    usuario=user,
+                    tipo_accion="forgot_password",
+                    accion="Solicitud de restablecimiento de contraseña",
+                    descripcion=f"Email enviado a: {email}",
+                    nivel="info",
+                    ip_address=get_client_ip(request),
+                    user_agent=request.META.get("HTTP_USER_AGENT", ""),
+                    datos_adicionales={"email": email, "email_sent": True},
+                )
+
+                print(f"✅ Email de recuperación enviado a: {email}")
+                print(f"🔗 URL de recuperación: {reset_url}")
+
+            except Exception as e:
+                # Error al enviar email
+                print(f"❌ Error al enviar email: {str(e)}")
+                Bitacora.log_activity(
+                    usuario=user,
+                    tipo_accion="forgot_password_error",
+                    accion="Error al enviar email de recuperación",
+                    descripcion=f"Error: {str(e)}",
+                    nivel="error",
+                    ip_address=get_client_ip(request),
+                    user_agent=request.META.get("HTTP_USER_AGENT", ""),
+                    datos_adicionales={"email": email, "error": str(e)},
+                )
+
+            # Siempre responder con éxito (por seguridad)
             return Response(
                 {"message": "Se han enviado las instrucciones a tu email"},
                 status=status.HTTP_200_OK,
@@ -999,8 +1053,98 @@ def forgot_password(request):
                 status=status.HTTP_200_OK,
             )
 
-    except Exception:
+    except Exception as e:
+        print(f"❌ Error en forgot_password: {str(e)}")
         return Response(
             {"message": "Error interno del servidor"},
             status=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
+
+
+# ==================== ViewSets para Clientes ====================
+
+class ClienteViewSet(viewsets.ModelViewSet):
+    """
+    ViewSet para gestionar clientes del gimnasio.
+    Proporciona operaciones CRUD completas.
+    """
+    queryset = Cliente.objects.all()
+    serializer_class = ClienteSerializer
+    permission_classes = [IsAuthenticated]
+    
+    def get_queryset(self):
+        """
+        Filtrar clientes por estado activo si se especifica en los parámetros.
+        """
+        queryset = Cliente.objects.all()
+        activo = self.request.query_params.get('activo', None)
+        
+        if activo is not None:
+            if activo.lower() == 'true':
+                queryset = queryset.filter(activo=True)
+            elif activo.lower() == 'false':
+                queryset = queryset.filter(activo=False)
+        
+        # Búsqueda por nombre o apellido
+        search = self.request.query_params.get('search', None)
+        if search:
+            queryset = queryset.filter(
+                nombre__icontains=search
+            ) | queryset.filter(
+                apellido__icontains=search
+            )
+        
+        return queryset.order_by('-fecha_registro')
+    
+    def perform_create(self, serializer):
+        """Registrar la creación de un cliente en la bitácora."""
+        cliente = serializer.save()
+        
+        Bitacora.log_activity(
+            usuario=self.request.user,
+            tipo_accion="crear_cliente",
+            accion="Creación de cliente",
+            descripcion=f"Cliente creado: {cliente.nombre_completo}",
+            nivel="info",
+            ip_address=get_client_ip(self.request),
+            user_agent=self.request.META.get("HTTP_USER_AGENT", ""),
+            datos_adicionales={
+                "cliente_id": cliente.id,
+                "nombre": cliente.nombre_completo
+            },
+        )
+    
+    def perform_update(self, serializer):
+        """Registrar la actualización de un cliente en la bitácora."""
+        cliente = serializer.save()
+        
+        Bitacora.log_activity(
+            usuario=self.request.user,
+            tipo_accion="actualizar_cliente",
+            accion="Actualización de cliente",
+            descripcion=f"Cliente actualizado: {cliente.nombre_completo}",
+            nivel="info",
+            ip_address=get_client_ip(self.request),
+            user_agent=self.request.META.get("HTTP_USER_AGENT", ""),
+            datos_adicionales={
+                "cliente_id": cliente.id,
+                "nombre": cliente.nombre_completo
+            },
+        )
+    
+    def perform_destroy(self, instance):
+        """Registrar la eliminación de un cliente en la bitácora."""
+        Bitacora.log_activity(
+            usuario=self.request.user,
+            tipo_accion="eliminar_cliente",
+            accion="Eliminación de cliente",
+            descripcion=f"Cliente eliminado: {instance.nombre_completo}",
+            nivel="warning",
+            ip_address=get_client_ip(self.request),
+            user_agent=self.request.META.get("HTTP_USER_AGENT", ""),
+            datos_adicionales={
+                "cliente_id": instance.id,
+                "nombre": instance.nombre_completo
+            },
+        )
+        instance.delete()
